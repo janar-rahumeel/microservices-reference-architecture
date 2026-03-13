@@ -1,0 +1,56 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "configMigration": true,
+  "extends": [
+    "config:best-practices",
+    ":preserveSemverRanges",
+    "customManagers:mavenPropertyVersions"
+  ],
+  "packageRules": [
+    {
+      "groupName": "Angular",
+      "matchPackageNames": [
+        "@angular/**"
+      ]
+    },
+    {
+      "description": "Disable Spring Boot major and minor version updates",
+      "matchCategories": "java",
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "matchManagers": [
+        "maven"
+      ],
+      "matchPackageNames": [
+        "org.springframework.boot:*"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Disable major version updates",
+      "matchCategories": [
+        "docker",
+        "js"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Disable JavaScript minor version updates for given packages",
+      "matchCategories": "js",
+      "matchUpdateTypes": [
+        "minor"
+      ],
+      "matchPackageNames": [
+        "@angular/**",
+        "rxjs",
+        "typescript"
+      ],
+      "enabled": false
+    }
+  ]
+}
