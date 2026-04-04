@@ -15,16 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.microservicesreferencearchitecture.gateway;
+@NullMarked
+package ee.geckosolutions.mra.gateway;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-
-@SpringBootApplication
-public class GatewayApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(GatewayApplication.class);
-    }
-
-}
+import org.jspecify.annotations.NullMarked;

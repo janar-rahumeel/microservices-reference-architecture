@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.microservicesreferencearchitecture.core;
+package ee.geckosolutions.mra.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class CoreApplication {
+public class GatewayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(CoreApplication.class);
+        SpringApplication.run(GatewayApplication.class);
     }
 
 }
