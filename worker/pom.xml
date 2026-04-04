@@ -12,7 +12,6 @@
 
     <groupId>ee.geckosolutions.microservices-reference-architecture</groupId>
     <artifactId>microservices-reference-architecture-worker</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
 
     <name>Worker Service</name>
     <description>Background processing service for asynchronous jobs and tasks</description>

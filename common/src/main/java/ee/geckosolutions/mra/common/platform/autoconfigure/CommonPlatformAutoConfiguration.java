@@ -1,0 +1,31 @@
+/*
+ * SPDX-License-Identifier: NONE
+ *
+ * Copyright (C) 2026-present Gecko Solutions OÃœ
+ * All rights reserved.
+ *
+ * This software is the proprietary and confidential property of Gecko Solutions OÃœ.
+ * Unauthorized copying, redistribution, or modification of this file, in whole or in part,
+ * is strictly prohibited without prior written consent from Gecko Solutions OÃœ.
+ *
+ * For licensing information, contact: licensing@geckosolutions.ee
+ */
+package ee.geckosolutions.mra.common.platform.autoconfigure;
+
+import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.annotation.Bean;
+
+@AutoConfiguration
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+public class CommonPlatformAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(ErrorResponseV2ExceptionHandler.class)
+    ErrorResponseV2ExceptionHandler errorResponseV2ExceptionHandler() {
+        return new ErrorResponseV2ExceptionHandler();
+    }
+
+}
