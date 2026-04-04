@@ -12,7 +12,6 @@
 
     <groupId>ee.geckosolutions.microservices-reference-architecture</groupId>
     <artifactId>microservices-reference-architecture-worker</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
 
     <name>Worker Service</name>
     <description>Background processing service for asynchronous jobs and tasks</description>
@@ -29,6 +28,16 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
