@@ -1,0 +1,14 @@
+name: local
+values:
+  - key: base_url
+    value: ''
+  - key: keycloak_base_url
+    value: ''
+  - key: realm
+    value: ''
+  - key: client_id
+    value: ''
+  - key: client_secret
+    value: ''
+  - key: access_token
+    value: ''

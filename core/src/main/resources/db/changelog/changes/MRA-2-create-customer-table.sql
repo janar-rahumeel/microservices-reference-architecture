@@ -5,12 +5,12 @@
 CREATE TABLE customer
 (
     id UUID PRIMARY KEY,
-    type VARCHAR(32) NOT NULL,
-    first_name VARCHAR(128),
-    last_name VARCHAR(128),
-    personal_identification_code VARCHAR(64),
-    name VARCHAR(256),
-    registration_code VARCHAR(64)
+    type TEXT NOT NULL,
+    first_name TEXT,
+    last_name TEXT,
+    personal_identification_code TEXT,
+    name TEXT,
+    registration_code TEXT
 );
 
 ALTER TABLE customer

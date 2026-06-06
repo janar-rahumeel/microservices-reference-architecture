@@ -69,6 +69,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 MediaType.APPLICATION_JSON));
 
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -112,6 +113,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode(registrationCode)
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(newLegalEntityCustomerV2, httpHeaders);
@@ -133,12 +135,12 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2BadRequestReturnsErrorResponseJson() throws Exception {
+    void testThatInsertCustomerV2BadRequestReturnsErrorResponse() throws Exception {
         // given
         String errorId = UUID.randomUUID().toString();
         String errorMessage = "Invalid customer payload";
         String errorResponseJson = """
-                {"id":"%s","errorCode":{"value":"general.technical.input-validation"},"message":"%s"}
+                {"id":"%s","errorCode":"general.technical.input-validation","message":"%s"}
                 """.formatted(errorId, errorMessage);
 
         URI uri = URI.create("http://core.test/internal/api/v2/customers");
@@ -150,6 +152,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         NewLegalEntityCustomerV2 invalidPayload = NewLegalEntityCustomerV2.builder().name("").registrationCode("").build();
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(invalidPayload, httpHeaders);
@@ -165,15 +168,15 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         assertThat(responseBody).isNotNull();
 
         JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
-        assertThat(responseJson.path("id").asText()).isEqualTo(errorId);
-        assertThat(responseJson.path("errorCode").path("value").asText()).isEqualTo("general.technical.input-validation");
-        assertThat(responseJson.path("message").asText()).isEqualTo(errorMessage);
+        assertThat(responseJson).isEqualTo(OBJECT_MAPPER.readTree("""
+                {"id":"%s","errorCode":"general.technical.input-validation","message":"%s"}
+                """.formatted(errorId, errorMessage)));
 
         coreServiceMockRestServiceServer.verify();
     }
 
     @Test
-    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponseJson() throws Exception {
+    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() {
         // given
         URI uri = URI.create("http://core.test/internal/api/v2/customers");
         coreServiceMockRestServiceServer.expect(requestTo(uri))
@@ -187,6 +190,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode("US656701")
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(validPayload, httpHeaders);
@@ -201,12 +205,35 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String responseBody = responseEntity.getBody();
         assertThat(responseBody).isNotNull();
 
-        JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
-        assertThat(responseJson.path("id").asText()).isNotBlank();
-        assertThat(responseJson.path("errorCode").path("value").asText()).isEqualTo("general.technical.service-unavailable");
-        assertThat(responseJson.path("message").asText()).isEqualTo("Downstream service is unavailable");
+        assertThat(responseBody).matches(
+                "\\{\"id\":\".*\",\"errorCode\":\"general\\.technical\\.service-unavailable\",\"message\":\"Downstream service is unavailable\"}");
 
         coreServiceMockRestServiceServer.verify();
+    }
+
+    @Test
+    void testThatGetCustomerV2WithoutBearerAuthReturnsUnauthorizedErrorResponse() {
+        // given
+        String customerId = UUID.randomUUID().toString();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
+
+        // when
+        ResponseEntity<String> responseEntity = testRestTemplate
+                .exchange("/api/v2/customers/" + customerId, HttpMethod.GET, httpEntity, String.class);
+
+        // then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(responseEntity.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).matches(
+                "Bearer realm=\"mra\", resource_metadata=\"http://localhost:\\d+/.well-known/oauth-protected-resource\"");
+
+        String responseBody = responseEntity.getBody();
+        assertThat(responseBody).isNotNull();
+
+        assertThat(responseBody).matches(
+                "\\{\"id\":\".*\",\"errorCode\":\"general\\.technical\\.unauthorized\",\"message\":\"Authentication is required\"}");
     }
 
 }

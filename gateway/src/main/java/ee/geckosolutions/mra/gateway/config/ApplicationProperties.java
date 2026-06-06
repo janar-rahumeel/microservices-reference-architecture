@@ -33,6 +33,7 @@ public class ApplicationProperties {
 
     private final InternalServices internalServices = new InternalServices();
     private final Customer customer = new Customer();
+    private final Security security = new Security();
     private Period apiDeprecationSunsetPeriod = Period.parse("P6M");
 
     @Getter
@@ -56,6 +57,14 @@ public class ApplicationProperties {
     public static class Customer {
 
         private Instant v1ApiDeprecatedSince;
+
+    }
+
+    @Getter
+    @Setter
+    public static class Security {
+
+        private String realmName;
 
     }
 

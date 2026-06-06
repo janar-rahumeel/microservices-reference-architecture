@@ -45,7 +45,18 @@
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
                 <configuration>
-                    <header>${project.baseUri}../etc/license/commercial.txt</header>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>${project.baseUri}../etc/license/commercial.txt</header>
+                            <properties>
+                                <year>2026</year>
+                            </properties>
+                            <includes>
+                                <include>**/*.java</include>
+                            </includes>
+                        </licenseSet>
+                    </licenseSets>
+                    <skipExistingHeaders>true</skipExistingHeaders>
                 </configuration>
             </plugin>
             <plugin>

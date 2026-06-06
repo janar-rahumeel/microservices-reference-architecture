@@ -33,19 +33,21 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void testThatGetCustomerV1IsSuccessful() {
@@ -67,6 +69,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 MediaType.APPLICATION_JSON));
 
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -118,6 +121,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode(registrationCode)
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewCustomerV1> httpEntity = new HttpEntity<>(newCustomerV1, httpHeaders);
@@ -139,13 +143,13 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatGetCustomerV1NotFoundReturnsErrorResponseJson() throws Exception {
+    void testThatGetCustomerV1NotFoundReturnsCorrectErrorResponse() {
         // given
         String customerId = UUID.randomUUID().toString();
         String errorId = UUID.randomUUID().toString();
         String errorMessage = "Customer not found";
         String errorResponseJson = """
-                {"id":"%s","errorCode":{"value":"general.technical.entity-not-found"},"message":"%s"}
+                {"id":"%s","errorCode":"general.technical.entity-not-found","message":"%s"}
                 """.formatted(errorId, errorMessage);
 
         URI uri = URI.create("http://core.test/internal/api/v1/customers/" + customerId);
@@ -155,6 +159,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .andRespond(withStatus(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body(errorResponseJson));
 
         HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth("token");
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -168,16 +173,36 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String responseBody = responseEntity.getBody();
         assertThat(responseBody).isNotNull();
 
-        JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
-        assertThat(responseJson.path("id").asText()).isEqualTo(errorId);
-        assertThat(responseJson.path("errorCode").path("value").asText()).isEqualTo("general.technical.entity-not-found");
-        assertThat(responseJson.path("message").asText()).isEqualTo(errorMessage);
+        JsonNode responseJson = objectMapper.readTree(responseBody);
+        assertThat(responseJson).isEqualTo(objectMapper.readTree("""
+                {"id":"%s","errorCode":"general.technical.entity-not-found","message":"%s"}
+                """.formatted(errorId, errorMessage)));
 
         HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
         assertThat(responseEntityHeaders.containsHeaderValue("deprecation", "@4070908800")).isTrue();
         assertThat(responseEntityHeaders.containsHeaderValue("sunset", "Wed, 1 Jul 2099 00:00:00 GMT")).isTrue();
 
         coreServiceMockRestServiceServer.verify();
+    }
+
+    @Test
+    void testThatGetCustomerV1WithoutBearerAuthReturnsStandardErrorResponse() {
+        // given
+        String customerId = UUID.randomUUID().toString();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
+
+        // when
+        ResponseEntity<String> responseEntity = testRestTemplate
+                .exchange("/api/v1/customers/" + customerId, HttpMethod.GET, httpEntity, String.class);
+
+        // then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(responseEntity.getHeaders().getFirst(HttpHeaders.WWW_AUTHENTICATE)).matches(
+                "Bearer realm=\"mra\", resource_metadata=\"http://localhost:\\d+/.well-known/oauth-protected-resource\"");
+        assertThat(responseEntity.getBody()).isNull();
     }
 
 }

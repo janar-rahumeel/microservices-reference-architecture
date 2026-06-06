@@ -15,6 +15,9 @@ package ee.geckosolutions.mra.common.platform.web.dto;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
+import ee.geckosolutions.mra.common.platform.web.jackson.ErrorCodeSerializer;
 
-public record ErrorResponseV2(UUID id, ErrorCode errorCode, String message) {
+import tools.jackson.databind.annotation.JsonSerialize;
+
+public record ErrorResponseV2(UUID id, @JsonSerialize(using = ErrorCodeSerializer.class) ErrorCode errorCode, String message) {
 }
