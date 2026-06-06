@@ -1,0 +1,17 @@
+$kind: http-request
+name: GET /api/v2/customers/_uuid_
+url: "{{base_url}}/api/v2/customers/aeae1424-8e03-4f08-b3fd-011cf58db562"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: oauth2
+  credentials:
+    tokenName: mra
+    grant_type: client_credentials
+    accessTokenUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"
+    clientId: "{{client_id}}"
+    clientSecret: "{{client_secret}}"
+settings:
+  disabledSystemHeaders: []
+order: 1428

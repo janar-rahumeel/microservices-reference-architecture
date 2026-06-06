@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.6</version>
+        <version>4.0.7</version>
         <relativePath/>
     </parent>
 
@@ -64,15 +64,19 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>4.3</version>
                     <configuration>
-                        <header>${project.baseUri}../etc/license/open.txt</header>
+                        <licenseSets>
+                            <set>
+                                <header>${project.baseUri}../etc/license/open.txt</header>
+                                <properties>
+                                    <year>2026</year>
+                                </properties>
+                                <includes>
+                                    <include>**/*.java</include>
+                                </includes>
+                            </set>
+                        </licenseSets>
                         <skipExistingHeaders>true</skipExistingHeaders>
                         <strictCheck>false</strictCheck>
-                        <properties>
-                            <year>2026</year>
-                        </properties>
-                        <includes>
-                            <include>**/*.java</include>
-                        </includes>
                     </configuration>
                     <executions>
                         <execution>

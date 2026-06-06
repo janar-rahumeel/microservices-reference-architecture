@@ -1,0 +1,13 @@
+$kind: collection
+name: Customers
+auth:
+  - id: 423b0e5b-3e1e-426c-9218-8960e097774e
+    type: oauth2
+    name: OAuth 2.0
+    credentials:
+      addTokenTo: header
+      grant_type: client_credentials
+      accessTokenUrl: http://localhost:8190/realms/mra/protocol/openid-connect/token
+      clientId: mra-api
+      clientSecret: mra-api-secret
+      tokenName: mra

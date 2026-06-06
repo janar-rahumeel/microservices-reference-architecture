@@ -47,12 +47,12 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     public ResponseEntity<Object> handleApplicationException(
             AbstractApplicationException applicationException,
             WebRequest webRequest) {
-        HttpStatus httpStatus = map(applicationException.getType());
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
                 applicationException.getErrorCode(),
                 applicationException.getMessage());
-        return handleExceptionInternal(applicationException, errorResponseV2Body, new HttpHeaders(), httpStatus, webRequest);
+        HttpStatus httpStatus = map(applicationException.getType());
+        return handleExceptionInternal(applicationException, errorResponseV2Body, HttpHeaders.EMPTY, httpStatus, webRequest);
     }
 
     private static HttpStatus map(ApplicationExceptionType applicationExceptionType) {
@@ -68,7 +68,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
                 UUID.randomUUID(),
                 domainException::getErrorCode,
                 domainException.getMessage());
-        return handleExceptionInternal(domainException, errorResponseV2Body, new HttpHeaders(), httpStatus, webRequest);
+        return handleExceptionInternal(domainException, errorResponseV2Body, HttpHeaders.EMPTY, httpStatus, webRequest);
     }
 
     private static HttpStatus map(DomainExceptionType domainExceptionType) {
@@ -89,7 +89,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         return handleExceptionInternal(
                 resourceAccessException,
                 errorResponseV2Body,
-                new HttpHeaders(),
+                HttpHeaders.EMPTY,
                 HttpStatus.SERVICE_UNAVAILABLE,
                 webRequest);
     }
@@ -103,7 +103,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         return handleExceptionInternal(
                 exception,
                 errorResponseV2Body,
-                new HttpHeaders(),
+                HttpHeaders.EMPTY,
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 webRequest);
     }
@@ -121,10 +121,10 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         }
 
         ErrorResponseV2 errorResponseV2 = (ErrorResponseV2) body;
-        if (exception instanceof AbstractDomainException domainException) {
-            log.warn("[UUID: {}] Domain exception has been occurred", errorResponseV2.id(), domainException);
+        if (httpStatusCode.is5xxServerError()) {
+            log.error("[UUID: {}] Critical error has occurred", errorResponseV2.id(), exception);
         } else {
-            log.error("[UUID: {}] Error has been occurred", errorResponseV2.id(), exception);
+            log.warn("[UUID: {}] Non-critical error has occurred", errorResponseV2.id(), exception);
         }
 
         return super.handleExceptionInternal(exception, body, httpHeaders, httpStatusCode, webRequest);

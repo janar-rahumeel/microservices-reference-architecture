@@ -1,6 +1,6 @@
 SPDX-License-Identifier: NONE
 
-Copyright (C) 2026-present Gecko Solutions OÜ
+Copyright (C) ${year}-present Gecko Solutions OÜ
 All rights reserved.
 
 This software is the proprietary and confidential property of Gecko Solutions OÜ.
