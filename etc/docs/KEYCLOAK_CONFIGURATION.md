@@ -1,4 +1,4 @@
-## Configure Client Credentials Flow (Keycloak)
+ ## Configure Client Credentials Flow (Keycloak)
 
 > ⚠️ **Demo vs PRODUCTION note**
 >

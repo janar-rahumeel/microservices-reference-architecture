@@ -32,7 +32,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-@TestConfiguration
+@TestConfiguration(proxyBeanMethods = false)
 class IntegrationTestConfiguration {
 
     public static final String CORE_SERVICE_MOCK_REST_SERVICE_SERVER_BEAN_NAME = "coreServiceMockRestServiceServer";

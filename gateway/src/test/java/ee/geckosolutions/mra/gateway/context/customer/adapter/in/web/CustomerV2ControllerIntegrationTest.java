@@ -79,6 +79,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         // then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseEntity.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
 
         PersonCustomerV2 personCustomerV2 = responseEntity.getBody();
         assertThat(personCustomerV2).isNotNull();

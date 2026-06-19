@@ -24,6 +24,7 @@ import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
@@ -39,12 +40,12 @@ public class ApplicationConfiguration {
     private final ApplicationProperties applicationProperties;
 
     @Bean(CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME)
-    RestClient.Builder coreServiceRestClientBuilder() {
+    RestClient.Builder coreServiceRestClientBuilder(RestClientBuilderConfigurer restClientBuilderConfigurer) {
         HttpServiceProperties httpServiceProperties = applicationProperties.getInternalServices().getCoreService();
         RestClient.Builder builder = HttpClientUtil.customize(RestClient.builder(), httpServiceProperties);
         builder.defaultStatusHandler(HttpStatusCode::isError, (ignoredHttpRequest, ignoredClientHttpResponse) -> {
         });
-        return builder;
+        return restClientBuilderConfigurer.configure(builder);
     }
 
     @Bean

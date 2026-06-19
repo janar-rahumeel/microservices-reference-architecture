@@ -29,6 +29,7 @@ import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -39,6 +40,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class SecurityExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
@@ -60,7 +62,13 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         }
 
         if (!httpServletResponse.isCommitted()) {
-            writeErrorResponseV2(httpServletResponse, () -> "general.technical.unauthorized", "Authentication is required");
+            UUID errorId = UUID.randomUUID();
+            log.warn("[UUID: {}] Non-critical error has occurred", errorId, authenticationException);
+            writeErrorResponseV2(
+                    httpServletResponse,
+                    errorId,
+                    () -> "general.technical.unauthorized",
+                    "Authentication is required");
         }
     }
 
@@ -76,7 +84,9 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         }
 
         if (!httpServletResponse.isCommitted()) {
-            writeErrorResponseV2(httpServletResponse, () -> "general.technical.forbidden", "Access is denied");
+            UUID errorId = UUID.randomUUID();
+            log.warn("[UUID: {}] Non-critical error has occurred", errorId, accessDeniedException);
+            writeErrorResponseV2(httpServletResponse, errorId, () -> "general.technical.forbidden", "Access is denied");
         }
     }
 
@@ -84,11 +94,13 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         return httpServletRequest.getRequestURI().startsWith("/api/v1/");
     }
 
-    private void writeErrorResponseV2(HttpServletResponse httpServletResponse, ErrorCode errorCode, String message)
-            throws IOException {
+    private void writeErrorResponseV2(
+            HttpServletResponse httpServletResponse,
+            UUID errorId,
+            ErrorCode errorCode,
+            String message) throws IOException {
         httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper
-                .writeValue(httpServletResponse.getOutputStream(), new ErrorResponseV2(UUID.randomUUID(), errorCode, message));
+        objectMapper.writeValue(httpServletResponse.getOutputStream(), new ErrorResponseV2(errorId, errorCode, message));
     }
 
     @PostConstruct

@@ -12,6 +12,7 @@ auth:
     accessTokenUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"
     clientId: "{{client_id}}"
     clientSecret: "{{client_secret}}"
+    addTokenTo: header
 settings:
   disabledSystemHeaders: []
 order: 1428

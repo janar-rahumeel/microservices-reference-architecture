@@ -29,10 +29,9 @@ public class LegalEntityCustomerV2 extends AbstractCustomerV2 {
     @JsonCreator
     public LegalEntityCustomerV2(
             @JsonProperty(value = "id") UUID id,
-            @JsonProperty(value = "type") CustomerTypeV2 type,
             @JsonProperty(value = "name") String name,
             @JsonProperty(value = "registrationCode") String registrationCode) {
-        super(id, type);
+        super(id);
         this.name = name;
         this.registrationCode = registrationCode;
     }

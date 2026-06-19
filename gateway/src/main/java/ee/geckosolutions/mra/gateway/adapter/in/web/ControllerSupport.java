@@ -36,17 +36,18 @@ public class ControllerSupport {
 
     private final ApplicationProperties applicationProperties;
 
-    public <T> ResponseEntity<T> withDeprecationHeaders(ResponseEntity<T> responseEntity, Instant deprecatedSince) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.putAll(responseEntity.getHeaders());
-        headers.add("Deprecation", "@" + deprecatedSince.getEpochSecond());
-        headers.add(
+    public <T> ResponseEntity<T> forwardWithDeprecationHeaders(ResponseEntity<T> responseEntity, Instant deprecatedSince) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("Deprecation", "@" + deprecatedSince.getEpochSecond());
+        httpHeaders.add(
                 "Sunset",
                 HTTP_DATE_FORMAT.format(
                         deprecatedSince.atZone(ZoneOffset.UTC)
                                 .plus(applicationProperties.getApiDeprecationSunsetPeriod())
                                 .toInstant()));
-        return new ResponseEntity<>(responseEntity.getBody(), headers, responseEntity.getStatusCode());
+        httpHeaders.setContentType(responseEntity.getHeaders().getContentType());
+
+        return new ResponseEntity<>(responseEntity.getBody(), httpHeaders, responseEntity.getStatusCode());
     }
 
 }

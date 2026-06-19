@@ -24,6 +24,7 @@ public class NewLegalEntityCustomerV2 extends AbstractNewCustomerV2 {
 
     @NotBlank
     private final String name;
+
     @NotBlank
     private final String registrationCode;
 

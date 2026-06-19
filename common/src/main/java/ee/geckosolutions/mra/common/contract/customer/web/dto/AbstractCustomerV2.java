@@ -16,21 +16,18 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "PERSON", value = PersonCustomerV2.class),
         @JsonSubTypes.Type(name = "LEGAL_ENTITY", value = LegalEntityCustomerV2.class) })
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractCustomerV2 {
 
     private final UUID id;
-    private final CustomerTypeV2 type;
-
-    protected AbstractCustomerV2(UUID id, CustomerTypeV2 type) {
-        this.id = id;
-        this.type = type;
-    }
 
 }
