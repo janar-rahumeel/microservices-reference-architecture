@@ -47,14 +47,14 @@ public class CustomerV1Controller implements CustomerV1Api {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<byte[]> get(@PathVariable UUID id) {
         Instant v1DeprecatedSince = applicationProperties.getCustomer().getV1ApiDeprecatedSince();
-        return controllerSupport.withDeprecationHeaders(internalCustomerV1Client.get(id), v1DeprecatedSince);
+        return controllerSupport.forwardWithDeprecationHeaders(internalCustomerV1Client.get(id), v1DeprecatedSince);
     }
 
     @Override
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<byte[]> insert(@RequestBody byte[] content) {
         Instant v1DeprecatedSince = applicationProperties.getCustomer().getV1ApiDeprecatedSince();
-        return controllerSupport.withDeprecationHeaders(internalCustomerV1Client.insert(content), v1DeprecatedSince);
+        return controllerSupport.forwardWithDeprecationHeaders(internalCustomerV1Client.insert(content), v1DeprecatedSince);
     }
 
 }

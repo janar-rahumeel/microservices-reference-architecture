@@ -156,7 +156,9 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         coreServiceMockRestServiceServer.expect(requestTo(uri))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
-                .andRespond(withStatus(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_JSON).body(errorResponseJson));
+                .andRespond(
+                        withStatus(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                                .body(errorResponseJson));
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth("token");
@@ -181,6 +183,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
         assertThat(responseEntityHeaders.containsHeaderValue("deprecation", "@4070908800")).isTrue();
         assertThat(responseEntityHeaders.containsHeaderValue("sunset", "Wed, 1 Jul 2099 00:00:00 GMT")).isTrue();
+        assertThat(responseEntityHeaders.getContentType()).isEqualTo(MediaType.APPLICATION_PROBLEM_JSON);
 
         coreServiceMockRestServiceServer.verify();
     }

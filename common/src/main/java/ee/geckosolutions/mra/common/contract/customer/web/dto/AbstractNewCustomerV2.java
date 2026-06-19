@@ -14,16 +14,13 @@ package ee.geckosolutions.mra.common.contract.customer.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "PERSON", value = NewPersonCustomerV2.class),
         @JsonSubTypes.Type(name = "LEGAL_ENTITY", value = NewLegalEntityCustomerV2.class) })
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractNewCustomerV2 {
 
 }

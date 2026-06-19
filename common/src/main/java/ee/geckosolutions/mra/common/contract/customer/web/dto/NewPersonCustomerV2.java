@@ -24,8 +24,10 @@ public class NewPersonCustomerV2 extends AbstractNewCustomerV2 {
 
     @NotBlank
     private final String firstName;
+
     @NotBlank
     private final String lastName;
+
     @NotBlank
     private final String personalIdentificationCode;
 

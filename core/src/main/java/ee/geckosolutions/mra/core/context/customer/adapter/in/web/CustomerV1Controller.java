@@ -46,7 +46,7 @@ public class CustomerV1Controller {
     private final CustomerV1WebMapper customerV1WebMapper;
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CustomerV1> get(@PathVariable UUID id) {
+    public ResponseEntity<CustomerV1> get(@PathVariable UUID id) throws Throwable {
         CustomerV1 customerV1 = customerV1WebMapper.toCustomerV1(customerApplicationService.getById(id));
         return ResponseEntity.ok(customerV1);
     }

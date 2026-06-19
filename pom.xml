@@ -43,6 +43,11 @@
                 <artifactId>lombok</artifactId>
                 <version>1.18.44</version>
             </dependency>
+            <dependency>
+                <groupId>org.zalando</groupId>
+                <artifactId>logbook-spring-boot-starter</artifactId>
+                <version>4.0.4</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -92,7 +97,7 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>3.6.0</version>
                     <configuration>
-                        <configLocation>${project.parent.basedir}/etc/format/checkstyle.xml</configLocation>
+                        <configLocation>${maven.multiModuleProjectDirectory}/etc/format/checkstyle.xml</configLocation>
                     </configuration>
                     <executions>
                         <execution>
@@ -115,10 +120,10 @@
                             </includes>
                             <lineEndings>UNIX</lineEndings>
                             <importOrder>
-                                <file>${project.parent.basedir}/etc/format/eclipse.importorder</file>
+                                <file>${maven.multiModuleProjectDirectory}/etc/format/eclipse.importorder</file>
                             </importOrder>
                             <eclipse>
-                                <file>${project.parent.basedir}/etc/format/eclipse-code-formatter.xml</file>
+                                <file>${maven.multiModuleProjectDirectory}/etc/format/eclipse-code-formatter.xml</file>
                             </eclipse>
                             <removeUnusedImports/>
                         </java>
@@ -148,11 +153,6 @@
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>1.6.3</version>
                             </path>
-                            <!--path>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok-mapstruct-binding</artifactId>
-                                <version>0.2.0</version>
-                            </path-->
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
@@ -175,6 +175,12 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

@@ -30,11 +30,10 @@ public class PersonCustomerV2 extends AbstractCustomerV2 {
     @JsonCreator
     public PersonCustomerV2(
             @JsonProperty(value = "id") UUID id,
-            @JsonProperty(value = "type") CustomerTypeV2 type,
             @JsonProperty(value = "firstName") String firstName,
             @JsonProperty(value = "lastName") String lastName,
             @JsonProperty(value = "personalIdentificationCode") String personalIdentificationCode) {
-        super(id, type);
+        super(id);
         this.firstName = firstName;
         this.lastName = lastName;
         this.personalIdentificationCode = personalIdentificationCode;

@@ -20,6 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.jspecify.annotations.Nullable;
 
 @Getter
 @Setter
@@ -31,12 +32,22 @@ public class NewCustomerV1 {
 
     @NotNull
     private CustomerTypeV1 type;
+
     // Person
+    @Nullable
     private String firstName;
+
+    @Nullable
     private String lastName;
+
+    @Nullable
     private String personalIdentificationCode;
+
     // Legal Entity
+    @Nullable
     private String name;
+
+    @Nullable
     private String registrationCode;
 
 }

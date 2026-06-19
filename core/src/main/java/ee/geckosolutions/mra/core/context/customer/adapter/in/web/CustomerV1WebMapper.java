@@ -44,9 +44,14 @@ public abstract class CustomerV1WebMapper {
     }
 
     @Mapping(target = "type", constant = "PRIVATE")
+    @Mapping(target = "name", ignore = true)
+    @Mapping(target = "registrationCode", ignore = true)
     protected abstract CustomerV1 map(PersonCustomer personCustomer);
 
     @Mapping(target = "type", constant = "COMPANY")
+    @Mapping(target = "firstName", ignore = true)
+    @Mapping(target = "lastName", ignore = true)
+    @Mapping(target = "personalIdentificationCode", ignore = true)
     protected abstract CustomerV1 map(LegalEntityCustomer legalEntityCustomer);
 
 }

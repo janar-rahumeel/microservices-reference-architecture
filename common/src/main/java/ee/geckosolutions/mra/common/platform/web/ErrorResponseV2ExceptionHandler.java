@@ -23,6 +23,8 @@ import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -37,6 +39,7 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(annotations = ErrorResponseV2Api.class)
 public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -44,7 +47,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     private static final ErrorCode FIELD_VALIDATION_ERROR_CODE = () -> "general.technical.field-validation";
 
     @ExceptionHandler(AbstractApplicationException.class)
-    public ResponseEntity<Object> handleApplicationException(
+    public @Nullable ResponseEntity<Object> handleApplicationException(
             AbstractApplicationException applicationException,
             WebRequest webRequest) {
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
@@ -62,7 +65,9 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     }
 
     @ExceptionHandler(AbstractDomainException.class)
-    public ResponseEntity<Object> handleDomainException(AbstractDomainException domainException, WebRequest webRequest) {
+    public @Nullable ResponseEntity<Object> handleDomainException(
+            AbstractDomainException domainException,
+            WebRequest webRequest) {
         HttpStatus httpStatus = map(domainException.getType());
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
@@ -79,7 +84,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     }
 
     @ExceptionHandler(ResourceAccessException.class)
-    public ResponseEntity<Object> handleResourceAccessException(
+    public @Nullable ResponseEntity<Object> handleResourceAccessException(
             ResourceAccessException resourceAccessException,
             WebRequest webRequest) {
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
@@ -95,7 +100,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleGeneralException(Exception exception, WebRequest webRequest) {
+    public @Nullable ResponseEntity<Object> handleGeneralException(Exception exception, WebRequest webRequest) {
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
                 GENERAL_ERROR_CODE,

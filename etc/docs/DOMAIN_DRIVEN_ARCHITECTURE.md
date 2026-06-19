@@ -8,7 +8,7 @@ The architecture follows an inward dependency rule:
 adapter → application → domain
 ```
 
-This ensures that the domain remains independent of frameworks, databases, and external systems.
+The codebase is organized first by **bounded contexts (business capabilities)** and then by architectural layers. This ensures that business functionality remains cohesive while dependencies always point toward the domain model.
 
 ## 1) Domain Layer (Business Core)
 
@@ -29,7 +29,7 @@ Domain objects must protect their invariants. Invalid states should be impossibl
 
 ### Tradeoff
 
-I keep domain boundaries strict, but avoid over-engineering simple cases. Not every rule requires a dedicated service or abstraction. However, all core business decisions must remain inside the domain layer.
+The domain boundaries are kept strict, but not over-engineered. Not every rule requires a dedicated service or abstraction. However, all core business decisions must remain inside the domain layer.
 
 ## 2) Application Layer (Use Cases)
 
@@ -40,18 +40,16 @@ It does not implement business rules—it executes them.
 ### Responsibilities
 
 - **Application Services / Use Cases**
-    - Orchestrate workflows
-    - Define transaction boundaries
+  - Orchestrate workflows
+  - Define transaction boundaries
 
 - **Commands and Queries**
-    - Separate write and read models when needed (CQS/CQRS)
+  - Separate write and read models when needed (CQS/CQRS)
 
 - **Ports (Interfaces)**
-    - Define required external capabilities (persistence, messaging, email, HTTP clients, etc.)
+  - Define required external capabilities (persistence, messaging, email, HTTP clients, etc.)
 
 ### Typical Flow
-
-A use case follows this sequence:
 
 1. Receive input intent
 2. Convert primitives into domain types
@@ -60,11 +58,11 @@ A use case follows this sequence:
 5. Persist changes via ports
 6. Trigger side effects (events, notifications, integrations)
 
-Application services should not depend on each other in a way that creates cycles. Shared orchestration logic should only be extracted when duplication becomes meaningful.
+Application services should not depend on each other in a way that creates cycles. Shared orchestration logic is extracted only when duplication becomes meaningful.
 
 ### Tradeoff
 
-For simplicity, I may avoid explicit command/query objects for every endpoint. However, the conceptual separation remains important and should guide future refactoring when complexity increases.
+For simplicity, explicit command/query objects may be omitted for every endpoint. However, the conceptual separation remains important and guides future refactoring as complexity grows.
 
 ## 3) Adapter Layer (Interface Adapters + Infrastructure)
 
@@ -74,15 +72,11 @@ Adapters depend inward on the application layer via ports.
 
 ### Inbound Adapters (Driving Adapters)
 
-These initiate application workflows:
-
 - REST Controllers
 - Message Consumers
 - Scheduled Jobs
 
 ### Outbound Adapters (Driven Adapters)
-
-These implement application-defined ports:
 
 - Database Repositories (JPA, JDBC, etc.)
 - HTTP Clients
@@ -132,7 +126,52 @@ adapter → application → domain
 
 Some pragmatic shortcuts may be used in adapters for delivery speed, but they must never leak into domain logic. Any technical debt must remain isolated and explicit.
 
-## 5) Why This Structure Helps AI-Assisted Development
+## 5) Package Structure (Bounded Contexts)
+
+The codebase is organized by **bounded contexts (business capabilities)** rather than technical layers. Each bounded context encapsulates a cohesive business domain and contains its own domain, application, and adapter packages.
+
+A bounded context represents a distinct business capability with its own terminology, rules, and lifecycle. Package names should reflect the business domain rather than technical concerns e.g. `customer`, `agreement`, or `meteringpoint`. Each context owns its business model and implementation details, minimizing coupling with other contexts. Communication between contexts should occur through well-defined application interfaces or domain events, avoiding direct access to another context's internal implementation.
+
+
+Example:
+
+```text
+ee.geckosolutions.mra.core
+└── context
+    ├── customer      // Customer Management
+    │   ├── domain
+    │   ├── application
+    │   └── adapter
+    ├── agreement     // Agreement Management
+    │   ├── domain
+    │   ├── application
+    │   └── adapter
+    └── meteringpoint // Metering Point Management
+        ├── domain
+        ├── application
+        └── adapter
+```
+
+Within each context, the same inward dependency rule applies:
+
+```text
+adapter → application → domain
+```
+
+### Benefits
+
+- Groups code by business capability rather than technical concern
+- Keeps related domain, application, and adapter code together
+- Reduces coupling between unrelated business areas
+- Enables contexts to evolve independently
+- Simplifies future extraction into separate modules or microservices
+- Improves navigation, discoverability, and AI-assisted code generation
+
+### Tradeoff
+
+Small systems may start with fewer contexts. New contexts should only be introduced when they represent a clear business capability, avoiding premature fragmentation.
+
+## 6) Why This Structure Helps AI-Assisted Development
 
 Clear separation of responsibilities improves predictability in code generation and refactoring.
 
@@ -145,12 +184,18 @@ Clear separation of responsibilities improves predictability in code generation 
 
 ### Practical Impact
 
-- Domain becomes stable and reusable context
+- Domain becomes a stable and reusable core model
 - Application layer becomes predictable orchestration space
 - Adapter layer becomes replaceable infrastructure boundary
 
 This reduces cognitive load and improves correctness in automated or AI-assisted development workflows.
 
-### Tradeoff
+## 7) Tradeoffs Summary
 
-Strict layering introduces some boilerplate (mappers, ports, DTOs). This is acceptable when it improves long-term maintainability and boundary clarity. Simplification is allowed only when it does not violate dependency direction or domain integrity.
+Strict layering introduces additional structure (ports, DTOs, mappers). This is acceptable when it improves long-term maintainability and boundary clarity.
+
+Simplification is allowed only when it does not violate:
+
+- Dependency direction
+- Domain integrity
+- Context boundaries

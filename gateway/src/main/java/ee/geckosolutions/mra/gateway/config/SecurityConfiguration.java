@@ -51,9 +51,9 @@ public class SecurityConfiguration {
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
-                .oauth2ResourceServer(configurer -> configurer.jwt(Customizer.withDefaults()))
-                .exceptionHandling(
-                        configurer -> configurer.authenticationEntryPoint(securityExceptionHandler)
+                .oauth2ResourceServer(
+                        configurer -> configurer.jwt(Customizer.withDefaults())
+                                .authenticationEntryPoint(securityExceptionHandler)
                                 .accessDeniedHandler(securityExceptionHandler))
                 .build();
     }

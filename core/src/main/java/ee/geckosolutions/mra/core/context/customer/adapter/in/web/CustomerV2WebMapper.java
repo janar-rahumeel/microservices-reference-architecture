@@ -26,7 +26,6 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, builder = @Builder(disableBuilder = true))
@@ -44,10 +43,8 @@ public abstract class CustomerV2WebMapper {
         throw new IllegalArgumentException("Unsupported customer type: " + customer.getClass().getName());
     }
 
-    @Mapping(target = "type", constant = "PERSON")
     protected abstract PersonCustomerV2 map(PersonCustomer personCustomer);
 
-    @Mapping(target = "type", constant = "LEGAL_ENTITY")
     protected abstract LegalEntityCustomerV2 map(LegalEntityCustomer legalEntityCustomer);
 
 }
