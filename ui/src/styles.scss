@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: (
+      plain-family: 'Roboto',
+      brand-family: 'Open Sans',
+      bold-weight: 900,
+      medium-weight: 600,
+      regular-weight: 400,
+    ),
+    density: (
+      scale: 0,
+    )
+  ));
+}
+
+:root {
+  @include mat.toolbar-overrides((
+    container-background-color: var(--mat-sys-on-primary),
+  ));
+}
+
+body {
+  margin: 0;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+}

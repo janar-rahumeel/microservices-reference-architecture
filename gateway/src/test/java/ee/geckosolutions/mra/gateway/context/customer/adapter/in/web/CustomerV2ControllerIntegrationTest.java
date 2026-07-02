@@ -25,6 +25,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.List;
@@ -34,6 +35,7 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustome
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
+import ee.geckosolutions.mra.gateway.test.TestUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +52,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
-    void testThatGetCustomerV2IsSuccessful() {
+    void testThatGetCustomerV2IsSuccessful() throws IOException {
         // given
         String customerId = UUID.randomUUID().toString();
         String firstName = "Chuck";
@@ -69,7 +71,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 MediaType.APPLICATION_JSON));
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -92,7 +94,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2IsSuccessful() {
+    void testThatInsertCustomerV2IsSuccessful() throws IOException {
         // given
         String customerId = UUID.randomUUID().toString();
         String name = "Chuck Norris Ltd.";
@@ -114,7 +116,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode(registrationCode)
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(newLegalEntityCustomerV2, httpHeaders);
@@ -153,7 +155,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         NewLegalEntityCustomerV2 invalidPayload = NewLegalEntityCustomerV2.builder().name("").registrationCode("").build();
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(invalidPayload, httpHeaders);
@@ -177,7 +179,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() {
+    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() throws IOException {
         // given
         URI uri = URI.create("http://core.test/internal/api/v2/customers");
         coreServiceMockRestServiceServer.expect(requestTo(uri))
@@ -191,7 +193,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode("US656701")
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(validPayload, httpHeaders);
