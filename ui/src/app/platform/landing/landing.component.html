@@ -1,0 +1,31 @@
+<mat-toolbar color="primary">
+    <span>Microservices Reference Architecture</span>
+    <span class="spacer"></span>
+    @if (isLoggedIn) {
+    <button mat-icon-button (click)="logout()" aria-label="Logout"  matTooltip="Logout">
+        <mat-icon color="warn">logout</mat-icon>
+    </button>
+    } @else {
+    <button mat-icon-button (click)="login()" aria-label="Login" matTooltip="Login">
+        <mat-icon color="primary">login</mat-icon>
+    </button>
+    }
+</mat-toolbar>
+<div class="container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Authentication</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <p>
+                <strong>Authenticated:</strong>
+                {{ isLoggedIn }}
+            </p>
+            @if (isLoggedIn) {
+            <mat-divider></mat-divider>
+            <h3>Access Token (decoded)</h3>
+            <pre>{{ token | json }}</pre>
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

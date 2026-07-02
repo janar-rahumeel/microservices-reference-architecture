@@ -19,6 +19,7 @@ package ee.geckosolutions.mra.gateway.test;
 
 import java.util.HashMap;
 import java.util.Map;
+import javax.crypto.SecretKey;
 
 import ee.geckosolutions.mra.gateway.config.ApplicationConfiguration;
 
@@ -26,9 +27,9 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
@@ -68,9 +69,9 @@ class IntegrationTestConfiguration {
     }
 
     @Bean
-    @Primary
     JwtDecoder jwtDecoder() {
-        return token -> Jwt.withTokenValue(token).header("alg", "none").claim("sub", "integration-test").build();
+        SecretKey secretKey = TestUtil.resolveJwtSecretKey();
+        return NimbusJwtDecoder.withSecretKey(secretKey).macAlgorithm(MacAlgorithm.HS256).build();
     }
 
 }

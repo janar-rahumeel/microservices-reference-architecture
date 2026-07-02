@@ -10,7 +10,6 @@
 
   <groupId>ee.geckosolutions.microservices-reference-architecture</groupId>
   <artifactId>microservices-reference-architecture-ui</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>User Interface</name>
@@ -18,9 +17,9 @@
 
   <properties>
     <!-- renovate: datasource=node-version depName=node -->
-    <node.version>24.14.0</node.version>
+    <node.version>24.18.0</node.version>
     <!-- renovate: datasource=npm depName=npm -->
-    <npm.version>11.11.0</npm.version>
+    <npm.version>11.18.0</npm.version>
   </properties>
 
   <build>

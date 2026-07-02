@@ -32,6 +32,7 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
+import ee.geckosolutions.mra.gateway.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 MediaType.APPLICATION_JSON));
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -121,7 +122,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode(registrationCode)
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewCustomerV1> httpEntity = new HttpEntity<>(newCustomerV1, httpHeaders);
@@ -161,7 +162,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 .body(errorResponseJson));
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth("token");
+        httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
