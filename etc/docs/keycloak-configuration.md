@@ -38,7 +38,7 @@ This enables the `client_credentials` grant type
 ### Token Request Example
 
 ```bash
-curl -X POST "http://localhost:8190/realms/mra/protocol/openid-connect/token" \
+curl -X POST "https://kc.mra.local:9443/realms/mra/protocol/openid-connect/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials" \
   -d "client_id=mra-api" \
@@ -53,8 +53,8 @@ curl -X POST "http://localhost:8190/realms/mra/protocol/openid-connect/token" \
   - `Require PKCE = ✔`
   - `PKCE Method = S256`
 
-- Valid redirect URIs = http://localhost:4200/auth/callback
-- Web origins = http://localhost:4200
+- Valid redirect URIs = https://ui.mra.local:4200/auth/callback
+- Web origins = https://ui.mra.local:4200
 - Go to **Users → Add user (e.g. `mra-demo`)**
   - `Required user actions = NONE`
   - `E-mail verified = OFF`

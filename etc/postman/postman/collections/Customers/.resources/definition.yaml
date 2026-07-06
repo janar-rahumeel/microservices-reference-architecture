@@ -5,9 +5,8 @@ auth:
     type: oauth2
     name: OAuth 2.0
     credentials:
-      addTokenTo: header
+      clientId: "{{client_id}}"
+      accessTokenUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"
+      tokenName: "mra"
+      clientSecret: "{{client_secret}}"
       grant_type: client_credentials
-      accessTokenUrl: http://localhost:8190/realms/mra/protocol/openid-connect/token
-      clientId: mra-api
-      clientSecret: mra-api-secret
-      tokenName: mra

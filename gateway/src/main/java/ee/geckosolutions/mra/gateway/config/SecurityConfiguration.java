@@ -17,11 +17,21 @@
  */
 package ee.geckosolutions.mra.gateway.config;
 
+import java.time.Duration;
 import java.util.Set;
 
 import ee.geckosolutions.mra.gateway.adapter.in.web.SecurityExceptionHandler;
 
+import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import org.springframework.boot.http.client.HttpClientSettings;
+import org.springframework.boot.restclient.RestTemplateBuilder;
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.JwkSetUriJwtDecoderBuilderCustomizer;
+import org.springframework.boot.ssl.NoSuchSslBundleException;
+import org.springframework.boot.ssl.SslBundle;
+import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -30,7 +40,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -56,6 +68,28 @@ public class SecurityConfiguration {
                                 .authenticationEntryPoint(securityExceptionHandler)
                                 .accessDeniedHandler(securityExceptionHandler))
                 .build();
+    }
+
+    @Bean
+    JwkSetUriJwtDecoderBuilderCustomizer jwkSetUriJwtDecoderBuilderCustomizer(
+            RestTemplateBuilder restTemplateBuilder,
+            SslBundles sslBundles) {
+        HttpClientSettings httpClientSettings = new HttpClientSettings(
+                null,
+                Duration.ofMillis(JWKSourceBuilder.DEFAULT_HTTP_CONNECT_TIMEOUT),
+                Duration.ofMillis(JWKSourceBuilder.DEFAULT_HTTP_READ_TIMEOUT),
+                resolveRootCaBundle(sslBundles));
+        RestTemplate restTemplate = restTemplateBuilder.clientSettings(httpClientSettings).build();
+        return jwkSetUriJwtDecoderBuilder -> jwkSetUriJwtDecoderBuilder.restOperations(restTemplate);
+    }
+
+    private static @Nullable SslBundle resolveRootCaBundle(SslBundles sslBundles) {
+        try {
+            return sslBundles.getBundle("root-ca");
+        } catch (NoSuchSslBundleException e) {
+            log.warn(e.getMessage());
+            return null;
+        }
     }
 
 }
