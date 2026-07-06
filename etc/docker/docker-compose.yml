@@ -14,7 +14,7 @@ services:
     depends_on:
       - keycloak-db
     ports:
-      - "8190:8080"
+      - "9443:8443"
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
@@ -23,7 +23,12 @@ services:
       KC_DB_PASSWORD: keycloak
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/tls.key
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/tls.crt
+      KC_HOSTNAME: kc.mra.local
     volumes:
       - ../../target/keycloak:/opt/keycloak/data
+      - ../../etc/certificate/mra.crt:/opt/keycloak/certs/tls.crt
+      - ../../etc/certificate/mra.key:/opt/keycloak/certs/tls.key
     command:
-      - start-dev
+      - start

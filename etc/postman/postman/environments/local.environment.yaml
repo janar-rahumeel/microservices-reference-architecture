@@ -1,14 +1,12 @@
 name: local
 values:
-  - key: base_url
-    value: ''
   - key: keycloak_base_url
-    value: ''
+    value: 'https://kc.mra.local:9443'
   - key: realm
-    value: ''
+    value: mra
   - key: client_id
-    value: ''
+    value: mra-api
   - key: client_secret
-    value: ''
-  - key: access_token
-    value: ''
+    value: mra-api-secret
+  - key: base_url
+    value: 'https://api.mra.local:8443'

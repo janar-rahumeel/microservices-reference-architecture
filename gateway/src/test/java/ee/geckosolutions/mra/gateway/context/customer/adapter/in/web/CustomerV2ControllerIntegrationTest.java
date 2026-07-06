@@ -25,7 +25,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.List;
@@ -52,7 +51,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
-    void testThatGetCustomerV2IsSuccessful() throws IOException {
+    void testThatGetCustomerV2IsSuccessful() {
         // given
         String customerId = UUID.randomUUID().toString();
         String firstName = "Chuck";
@@ -94,7 +93,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2IsSuccessful() throws IOException {
+    void testThatInsertCustomerV2IsSuccessful() {
         // given
         String customerId = UUID.randomUUID().toString();
         String name = "Chuck Norris Ltd.";
@@ -179,7 +178,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() throws IOException {
+    void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() {
         // given
         URI uri = URI.create("http://core.test/internal/api/v2/customers");
         coreServiceMockRestServiceServer.expect(requestTo(uri))

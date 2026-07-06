@@ -52,7 +52,7 @@ public class TestUtil {
     private static JwtEncoderParameters resolveJwtEncoderParameters() {
         Instant now = Instant.now();
         JwtClaimsSet jwtClaimsSet = JwtClaimsSet.builder()
-                .issuer("http://localhost:8190/realms/mra")
+                .issuer("https://kc.mra.local:9443/realms/mra")
                 .subject("04f47c28-9097-455e-806c-1ebc6a6295ed")
                 .audience(List.of("mra"))
                 .issuedAt(now)

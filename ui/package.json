@@ -3,8 +3,7 @@
   "version": "0.0.1-SNAPSHOT",
   "license": "UNLICENSED",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve"
+    "start": "ng serve --host ui.mra.local --ssl true --ssl-cert ../etc/certificate/mra.crt --ssl-key ../etc/certificate/mra.key"
   },
   "private": true,
   "dependencies": {

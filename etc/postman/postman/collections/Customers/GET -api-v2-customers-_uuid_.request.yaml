@@ -5,14 +5,9 @@ method: GET
 headers:
   Accept: application/json
 auth:
-  type: oauth2
+  type: inherit
   credentials:
-    tokenName: mra
-    grant_type: client_credentials
-    accessTokenUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"
-    clientId: "{{client_id}}"
-    clientSecret: "{{client_secret}}"
-    addTokenTo: header
+    id: 423b0e5b-3e1e-426c-9218-8960e097774e
 settings:
   disabledSystemHeaders: []
 order: 1428
