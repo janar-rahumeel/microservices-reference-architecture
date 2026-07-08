@@ -29,7 +29,10 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
         Map<String, Object> defaultProperties = new HashMap<>();
         defaultProperties.put("spring.task.execution.propagate-context", true);
-        defaultProperties.putAll(managementDefaultProperties());
+
+        if (managementDefaultsEnabled(configurableEnvironment)) {
+            defaultProperties.putAll(managementDefaultProperties());
+        }
 
         if (ClassUtils.isPresent("tools.jackson.databind.ObjectMapper", springApplication.getClassLoader())) {
             defaultProperties.putAll(jacksonDefaultProperties());
@@ -60,6 +63,41 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
             configurableEnvironment.getPropertySources()
                     .addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, defaultProperties));
         }
+    }
+
+    private static boolean managementDefaultsEnabled(ConfigurableEnvironment configurableEnvironment) {
+        return configurableEnvironment.getProperty("management.server.port", Integer.class, 0) > -1;
+    }
+
+    private static Map<String, Object> managementDefaultProperties() {
+        // https://docs.spring.io/spring-boot/reference/actuator/tracing.html#actuator.micrometer-tracing.sampling
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.otlp.metrics.export.enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.logging.export.otlp.enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.opentelemetry.tracing.export.otlp.transport
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.metrics.tags
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.endpoints.web.base-path
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.endpoints.web.exposure.include
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.server.ssl.enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.server.port
+        return Map.of(
+                "management.tracing.sampling.probability",
+                1.0,
+                "management.otlp.metrics.export.enabled",
+                false,
+                "management.logging.export.otlp.enabled",
+                false,
+                "management.opentelemetry.tracing.export.otlp.transport",
+                "grpc",
+                "management.metrics.tags.application",
+                "${spring.application.name}",
+                "management.endpoints.web.base-path",
+                "/internal/actuator",
+                "management.endpoints.web.exposure.include",
+                "health,prometheus,info",
+                "management.server.ssl.enabled",
+                false,
+                "management.server.port",
+                8081);
     }
 
     private static Map<String, Object> jacksonDefaultProperties() {
@@ -101,22 +139,6 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
                 true,
                 "spring.rabbitmq.listener.simple.observation-enabled",
                 true);
-    }
-
-    private static Map<String, Object> managementDefaultProperties() {
-        // https://docs.spring.io/spring-boot/reference/actuator/tracing.html#actuator.micrometer-tracing.sampling
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.otlp.metrics.export.enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.logging.export.otlp.enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.opentelemetry.tracing.export.otlp.transport
-        return Map.of(
-                "management.tracing.sampling.probability",
-                1.0,
-                "management.otlp.metrics.export.enabled",
-                false,
-                "management.logging.export.otlp.enabled",
-                false,
-                "management.opentelemetry.tracing.export.otlp.transport",
-                "grpc");
     }
 
 }

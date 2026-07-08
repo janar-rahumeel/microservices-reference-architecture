@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
     volumes:
-      - ../../target/postgresql/keycloak:/var/lib/postgresql
+      - ./data/postgresql/keycloak:/var/lib/postgresql
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.6
@@ -27,9 +27,9 @@ services:
       KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/tls.crt
       KC_HOSTNAME: kc.mra.local
     volumes:
-      - ../../target/keycloak:/opt/keycloak/data
       - ../../etc/certificate/mra.crt:/opt/keycloak/certs/tls.crt
       - ../../etc/certificate/mra.key:/opt/keycloak/certs/tls.key
+      - ./data/keycloak:/opt/keycloak/data
     command:
       - start
 
@@ -41,29 +41,43 @@ services:
     volumes:
       - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ../../target/rabbitmq:/var/lib/rabbitmq
+      - ./data/rabbitmq:/var/lib/rabbitmq
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.27.0
+    ports:
+      - "9115:9115"
+    volumes:
+      - ./config/prometheus/blackbox.yaml:/etc/blackbox_exporter/config.yml:ro
+
+  prometheus:
+    image: prom/prometheus:v3.13.0
+    ports:
+      - "9444:9090"
+    depends_on:
+      - blackbox
+    volumes:
+      - ./config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
 
   tempo:
     image: grafana/tempo:latest
     ports:
       - "3200:3200"
       - "4317:4317"
-      - "4318:4318"
     volumes:
-      - ./config/tempo/tempo.yaml:/etc/tempo.yaml:ro
-      - ../../target/tempo:/tmp/tempo
-    command:
-      - "-config.file=/etc/tempo.yaml"
+      - ./config/tempo/tempo.yaml:/etc/config.yaml:ro
+      - ./data/tempo:/tmp/tempo
 
   grafana:
     image: grafana/grafana:13.1
     ports:
       - "9445:3000"
     depends_on:
+      - prometheus
       - tempo
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ../../target/grafana:/var/lib/grafana
+      - ./data/grafana:/var/lib/grafana

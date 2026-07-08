@@ -1,18 +1,24 @@
 
 deploy-keycloak-db:
-	docker compose -f ./etc/docker/docker-compose.yml up keycloak-db -d
+	docker compose -f ./etc/docker/docker-compose.yaml up keycloak-db -d
 
 deploy-keycloak:
-	docker compose -f ./etc/docker/docker-compose.yml up keycloak -d
+	docker compose -f ./etc/docker/docker-compose.yaml up keycloak -d
 
 deploy-rabbitmq:
-	docker compose -f ./etc/docker/docker-compose.yml up rabbitmq -d
+	docker compose -f ./etc/docker/docker-compose.yaml up rabbitmq -d
+
+deploy-blackbox:
+	docker compose -f ./etc/docker/docker-compose.yaml up blackbox -d
+
+deploy-prometheus:
+	docker compose -f ./etc/docker/docker-compose.yaml up prometheus -d
 
 deploy-tempo:
-	docker compose -f ./etc/docker/docker-compose.yml up tempo -d
+	docker compose -f ./etc/docker/docker-compose.yaml up tempo -d
 
 deploy-grafana:
-	docker compose -f ./etc/docker/docker-compose.yml up grafana -d
+	docker compose -f ./etc/docker/docker-compose.yaml up grafana -d
 
 start-ui:
 	$(MAKE) -C ui start
