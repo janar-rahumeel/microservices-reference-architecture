@@ -65,7 +65,9 @@ and infrastructure monitoring
 Tempo receives distributed traces from Spring Boot applications via
 OpenTelemetry, enabling end-to-end tracing across services
 
-#### Prometheus (Coming Soon)
+#### Prometheus (including Blackbox Exporter)
+
+URL: http://localhost:9444
 
 Prometheus scrapes metrics exposed by Spring Boot Actuator endpoints and
 stores them for visualization and alerting in Grafana
@@ -87,6 +89,8 @@ make start-gateway
 ```
 
 URL: https://api.mra.local:8443
+
+Swagger UI: https://api.mra.local:8443/swagger-ui/index.html
 
 #### Core Microservice
 

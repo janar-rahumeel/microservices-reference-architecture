@@ -64,10 +64,9 @@ public class ApplicationConfiguration {
                         operation.setDeprecated(true);
 
                         if (deprecatedEndpoint.successorLink() != null) {
-                            operation.setDescription(
-                                    (operation.getDescription() == null ? "" : operation.getDescription() + "\n\n")
-                                            + "**This endpoint is deprecated.** Use " + deprecatedEndpoint.successorLink()
-                                            + " instead");
+                            String description = (operation.getDescription() != null ? operation.getDescription() + ". " : "")
+                                    + "Use " + deprecatedEndpoint.successorLink() + " instead";
+                            operation.setDescription(description);
                         }
                     }
                 });

@@ -26,8 +26,12 @@ import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.boot.actuate.info.InfoEndpoint;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.http.client.HttpClientSettings;
+import org.springframework.boot.micrometer.metrics.autoconfigure.export.prometheus.PrometheusScrapeEndpoint;
 import org.springframework.boot.restclient.RestTemplateBuilder;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.boot.security.oauth2.server.resource.autoconfigure.JwkSetUriJwtDecoderBuilderCustomizer;
 import org.springframework.boot.ssl.NoSuchSslBundleException;
 import org.springframework.boot.ssl.SslBundle;
@@ -51,6 +55,7 @@ public class SecurityConfiguration {
 
     private static final Set<String> PERMITTED_REQUEST_URI_PATTERNS = Set
             .of("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml", "/v3/api-docs");
+    private static final Set<String> STATIC_RESOURCE_REQUEST_URI_PATTERNS = Set.of("/favicon.ico");
 
     private final SecurityExceptionHandler securityExceptionHandler;
 
@@ -59,7 +64,12 @@ public class SecurityConfiguration {
         return httpSecurity.securityMatcher("/**")
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(
-                        registry -> registry.requestMatchers(PERMITTED_REQUEST_URI_PATTERNS.toArray(String[]::new))
+                        registry -> registry.requestMatchers(
+                                EndpointRequest.to(HealthEndpoint.class, PrometheusScrapeEndpoint.class, InfoEndpoint.class))
+                                .permitAll()
+                                .requestMatchers(PERMITTED_REQUEST_URI_PATTERNS.toArray(String[]::new))
+                                .permitAll()
+                                .requestMatchers(STATIC_RESOURCE_REQUEST_URI_PATTERNS.toArray(String[]::new))
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
