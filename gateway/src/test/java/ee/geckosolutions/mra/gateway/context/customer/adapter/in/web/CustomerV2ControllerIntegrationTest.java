@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.gateway.context.customer.adapter.in.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -104,6 +105,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(header("traceparent", matchesPattern("00-4bf92f3577b34da6a3ce929d0e0e4736-[0-9a-f]{16}-01")))
                 .andRespond(
                         withSuccess(
                                 "{\"id\":\"" + customerId + "\",\"type\":\"LEGAL_ENTITY\",\"name\":\"" + name
@@ -118,6 +120,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         httpHeaders.setBearerAuth(TestUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.set("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01");
         HttpEntity<NewLegalEntityCustomerV2> httpEntity = new HttpEntity<>(newLegalEntityCustomerV2, httpHeaders);
 
         // when

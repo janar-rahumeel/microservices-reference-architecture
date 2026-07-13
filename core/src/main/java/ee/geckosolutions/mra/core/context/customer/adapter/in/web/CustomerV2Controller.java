@@ -25,6 +25,10 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.AbstractCustomerV2
 import ee.geckosolutions.mra.common.contract.customer.web.dto.AbstractNewCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewPersonCustomerV2;
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2Api;
 import ee.geckosolutions.mra.core.context.customer.application.CustomerApplicationService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
@@ -38,6 +42,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+@Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.CUSTOMER)
 @RequestMapping(value = "/internal/api/v2/customers")
 @ErrorResponseV2Api
 @RequiredArgsConstructor

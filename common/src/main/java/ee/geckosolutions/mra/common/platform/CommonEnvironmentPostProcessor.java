@@ -23,9 +23,13 @@ import org.springframework.util.ClassUtils;
 
 public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
+    static final String PROPERTY_SOURCE_NAME = "mra-defaults";
+
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
         Map<String, Object> defaultProperties = new HashMap<>();
+        defaultProperties.put("spring.task.execution.propagate-context", true);
+        defaultProperties.putAll(managementDefaultProperties());
 
         if (ClassUtils.isPresent("tools.jackson.databind.ObjectMapper", springApplication.getClassLoader())) {
             defaultProperties.putAll(jacksonDefaultProperties());
@@ -40,8 +44,21 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
             defaultProperties.putAll(datasourceDefaultProperties());
         }
 
+        if (ClassUtils.isPresent(
+                "net.ttddyy.observation.boot.autoconfigure.DataSourceObservationAutoConfiguration",
+                springApplication.getClassLoader())) {
+            defaultProperties.putAll(datasourceObservationDefaultProperties());
+        }
+
+        if (ClassUtils.isPresent(
+                "org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration",
+                springApplication.getClassLoader())) {
+            defaultProperties.putAll(rabbitMqDefaultProperties());
+        }
+
         if (!defaultProperties.isEmpty()) {
-            configurableEnvironment.getPropertySources().addLast(new MapPropertySource("mra-defaults", defaultProperties));
+            configurableEnvironment.getPropertySources()
+                    .addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, defaultProperties));
         }
     }
 
@@ -70,6 +87,36 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     private static Map<String, Object> datasourceDefaultProperties() {
         // https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.datasource.lazy-connection
         return Map.of("spring.datasource.connection-fetch", "lazy");
+    }
+
+    private static Map<String, Object> datasourceObservationDefaultProperties() {
+        // https://jdbc-observations.github.io/datasource-micrometer/docs/current/docs/html/#using-features-hikaricp-support
+        return Map.of("jdbc.hikari.enabled", false);
+    }
+
+    private static Map<String, Object> rabbitMqDefaultProperties() {
+        //
+        return Map.of(
+                "spring.rabbitmq.template.observation-enabled",
+                true,
+                "spring.rabbitmq.listener.simple.observation-enabled",
+                true);
+    }
+
+    private static Map<String, Object> managementDefaultProperties() {
+        // https://docs.spring.io/spring-boot/reference/actuator/tracing.html#actuator.micrometer-tracing.sampling
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.otlp.metrics.export.enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.logging.export.otlp.enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.opentelemetry.tracing.export.otlp.transport
+        return Map.of(
+                "management.tracing.sampling.probability",
+                1.0,
+                "management.otlp.metrics.export.enabled",
+                false,
+                "management.logging.export.otlp.enabled",
+                false,
+                "management.opentelemetry.tracing.export.otlp.transport",
+                "grpc");
     }
 
 }

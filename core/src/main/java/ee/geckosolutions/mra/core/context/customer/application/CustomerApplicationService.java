@@ -19,6 +19,7 @@ package ee.geckosolutions.mra.core.context.customer.application;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.platform.observation.ApplicationService;
 import ee.geckosolutions.mra.core.context.customer.application.exception.CustomerNotFoundException;
 import ee.geckosolutions.mra.core.context.customer.application.port.CustomerRepository;
 import ee.geckosolutions.mra.core.context.customer.domain.exception.DuplicateCustomerException;
@@ -27,14 +28,17 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCusto
 import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@ApplicationService
 @RequiredArgsConstructor
 public class CustomerApplicationService {
 
     private final CustomerRepository customerRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional(readOnly = true)
     public Customer getById(UUID id) {
@@ -50,7 +54,9 @@ public class CustomerApplicationService {
                     "Person with personal identification code already exists: " + customer.getPersonalIdentificationCode());
         }
 
-        return customerRepository.create(customer);
+        Customer persistedCustomer = customerRepository.create(customer);
+        customer.drainDomainEvents().forEach(applicationEventPublisher::publishEvent);
+        return persistedCustomer;
     }
 
     @Transactional
@@ -62,7 +68,9 @@ public class CustomerApplicationService {
                     "Legal entity with registration code already exists: " + customer.getRegistrationCode());
         }
 
-        return customerRepository.create(customer);
+        Customer persistedCustomer = customerRepository.create(customer);
+        customer.drainDomainEvents().forEach(applicationEventPublisher::publishEvent);
+        return persistedCustomer;
     }
 
 }

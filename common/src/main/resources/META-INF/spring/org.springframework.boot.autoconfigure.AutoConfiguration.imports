@@ -1,1 +1,2 @@
 ee.geckosolutions.mra.common.platform.autoconfigure.CommonPlatformAutoConfiguration
+ee.geckosolutions.mra.common.platform.autoconfigure.CommonPlatformWebAutoConfiguration

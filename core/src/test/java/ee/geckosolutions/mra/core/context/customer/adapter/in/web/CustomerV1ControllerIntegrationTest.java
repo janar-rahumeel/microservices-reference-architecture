@@ -18,9 +18,13 @@
 package ee.geckosolutions.mra.core.context.customer.adapter.in.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Objects;
 
+import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
@@ -29,10 +33,16 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCustomer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 import ee.geckosolutions.mra.core.test.AbstractWebIntegrationTest;
+import ee.geckosolutions.mra.core.test.IntegrationTestConfiguration;
 import ee.geckosolutions.mra.core.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,6 +53,12 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
     @Autowired
     private CustomerApplicationService customerApplicationService;
+
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Test
     void testThatGetCustomerV1IsSuccessful() {
@@ -75,18 +91,23 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
     @Test
     void testThatInsertCustomerV1IsSuccessful() {
         // given
+        rabbitAdmin.purgeQueue(IntegrationTestConfiguration.EVENTS_QUEUE_NAME, true);
+
         NewCustomerV1 newCustomerV1 = NewCustomerV1.builder()
                 .type(CustomerTypeV1.COMPANY)
                 .name("Chuck Norris Ltd")
                 .registrationCode("14447331")
                 .build();
 
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.set("traceparent", "00-4bf52f3577b34da6a3ce929d0e0e4737-00f067aa0ba902b8-01");
+        HttpEntity<?> httpEntity = new HttpEntity<>(newCustomerV1, httpHeaders);
+
         // when
-        ResponseEntity<CustomerV1> responseEntity = testRestTemplate.exchange(
-                "/internal/api/v1/customers",
-                HttpMethod.POST,
-                TestUtil.jsonHttpEntity(newCustomerV1),
-                CustomerV1.class);
+        ResponseEntity<CustomerV1> responseEntity = testRestTemplate
+                .exchange("/internal/api/v1/customers", HttpMethod.POST, httpEntity, CustomerV1.class);
 
         // then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -104,6 +125,17 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         Customer customer = customerApplicationService.getById(customerV1.getId());
         assertThat(customer).isInstanceOf(LegalEntityCustomer.class);
+
+        Message message = await()
+                .until(() -> rabbitTemplate.receive(IntegrationTestConfiguration.EVENTS_QUEUE_NAME), Objects::nonNull);
+        CustomerCreatedEventV1 customerCreatedEventV1 = (CustomerCreatedEventV1) rabbitTemplate.getMessageConverter()
+                .fromMessage(message);
+        assertThat(customerCreatedEventV1).isNotNull();
+        assertThat(customerCreatedEventV1.id()).isEqualTo(customer.getId());
+
+        String traceparent = (String) message.getMessageProperties().getHeaders().get("traceparent");
+        assertThat(traceparent).isNotNull();
+        assertThat(traceparent).matches("00-4bf52f3577b34da6a3ce929d0e0e4737-[0-9a-f]{16}-01");
     }
 
     @Test

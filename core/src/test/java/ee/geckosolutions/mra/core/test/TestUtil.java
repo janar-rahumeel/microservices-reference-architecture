@@ -17,13 +17,24 @@
  */
 package ee.geckosolutions.mra.core.test;
 
+import java.time.Duration;
 import java.util.List;
 
+import org.awaitility.Awaitility;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
-public class TestUtil {
+public final class TestUtil {
+
+    private TestUtil() {
+    }
+
+    static {
+        Awaitility.setDefaultPollDelay(Duration.ZERO);
+        Awaitility.setDefaultPollInterval(Duration.ofMillis(200));
+        Awaitility.setDefaultTimeout(Duration.ofSeconds(5));
+    }
 
     public static HttpEntity<String> jsonHttpEntity() {
         HttpHeaders httpHeaders = new HttpHeaders();

@@ -19,6 +19,8 @@ package ee.geckosolutions.mra.core.context.customer.domain.model;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.core.context.customer.domain.event.CustomerCreatedEvent;
+
 import lombok.Getter;
 
 @Getter
@@ -34,7 +36,9 @@ public class LegalEntityCustomer extends Customer {
     }
 
     public static LegalEntityCustomer createNew(String name, String registrationCode) {
-        return new LegalEntityCustomer(UUID.randomUUID(), name, registrationCode);
+        LegalEntityCustomer legalEntityCustomer = new LegalEntityCustomer(UUID.randomUUID(), name, registrationCode);
+        legalEntityCustomer.registerEvent(new CustomerCreatedEvent(legalEntityCustomer.getId()));
+        return legalEntityCustomer;
     }
 
 }

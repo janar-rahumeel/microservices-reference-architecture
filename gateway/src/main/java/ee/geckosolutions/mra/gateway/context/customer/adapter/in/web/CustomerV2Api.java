@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.gateway.context.customer.adapter.in.web;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
@@ -45,7 +46,7 @@ public interface CustomerV2Api {
                             content = @Content(
                                     schema = @Schema(oneOf = { PersonCustomerV2.class, LegalEntityCustomerV2.class }))),
                     @ApiResponse(responseCode = "404", description = "Customer not found") })
-    ResponseEntity<byte[]> get(UUID id);
+    Callable<ResponseEntity<byte[]>> get(UUID id);
 
     @Operation(
             summary = "Create a new customer",
@@ -62,6 +63,6 @@ public interface CustomerV2Api {
                                     schema = @Schema(oneOf = { PersonCustomerV2.class, LegalEntityCustomerV2.class }))),
                     @ApiResponse(responseCode = "400", description = "Invalid input"),
                     @ApiResponse(responseCode = "409", description = "Customer already exists") })
-    ResponseEntity<byte[]> insert(@RequestBody byte[] content);
+    Callable<ResponseEntity<byte[]>> insert(@RequestBody byte[] content);
 
 }

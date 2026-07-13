@@ -20,11 +20,13 @@ package ee.geckosolutions.mra.gateway.adapter.in.web;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.function.Supplier;
 
 import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -48,6 +50,19 @@ public class ControllerSupport {
         httpHeaders.setContentType(responseEntity.getHeaders().getContentType());
 
         return new ResponseEntity<>(responseEntity.getBody(), httpHeaders, responseEntity.getStatusCode());
+    }
+
+    public static ResponseEntity<byte[]> executeHttpRequest(Supplier<ResponseEntity<byte[]>> clientRequestSupplier) {
+        ResponseEntity<byte[]> responseEntity = clientRequestSupplier.get();
+
+        ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.status(responseEntity.getStatusCode());
+
+        MediaType contentType = responseEntity.getHeaders().getContentType();
+        if (contentType != null) {
+            bodyBuilder.contentType(contentType);
+        }
+
+        return bodyBuilder.body(responseEntity.getBody());
     }
 
 }

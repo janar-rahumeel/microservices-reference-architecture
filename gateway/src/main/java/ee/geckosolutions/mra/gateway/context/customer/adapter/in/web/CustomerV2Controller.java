@@ -18,8 +18,14 @@
 package ee.geckosolutions.mra.gateway.context.customer.adapter.in.web;
 
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2Api;
+import ee.geckosolutions.mra.gateway.adapter.in.web.ControllerSupport;
 import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCustomerV2Client;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +37,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+@Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.CUSTOMER)
 @RequestMapping("/api/v2/customers")
 @ErrorResponseV2Api
 @RequiredArgsConstructor
@@ -40,14 +47,14 @@ public class CustomerV2Controller implements CustomerV2Api {
 
     @Override
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<byte[]> get(@PathVariable UUID id) {
-        return internalCustomerV2Client.get(id);
+    public Callable<ResponseEntity<byte[]>> get(@PathVariable UUID id) {
+        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.get(id));
     }
 
     @Override
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<byte[]> insert(@RequestBody byte[] content) {
-        return internalCustomerV2Client.insert(content);
+    public Callable<ResponseEntity<byte[]>> insert(@RequestBody byte[] content) {
+        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.insert(content));
     }
 
 }

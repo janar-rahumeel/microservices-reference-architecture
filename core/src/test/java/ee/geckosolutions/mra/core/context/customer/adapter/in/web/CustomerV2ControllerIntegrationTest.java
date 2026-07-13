@@ -18,7 +18,12 @@
 package ee.geckosolutions.mra.core.context.customer.adapter.in.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
+import java.util.List;
+import java.util.Objects;
+
+import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
@@ -28,10 +33,16 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCustomer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 import ee.geckosolutions.mra.core.test.AbstractWebIntegrationTest;
+import ee.geckosolutions.mra.core.test.IntegrationTestConfiguration;
 import ee.geckosolutions.mra.core.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -41,6 +52,12 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
     @Autowired
     private CustomerApplicationService customerApplicationService;
+
+    @Autowired
+    private RabbitAdmin rabbitAdmin;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
     @Test
     void testThatGetCustomerV2IsSuccessful() {
@@ -70,17 +87,22 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     @Test
     void testThatInsertCustomerV2IsSuccessful() {
         // given
+        rabbitAdmin.purgeQueue(IntegrationTestConfiguration.EVENTS_QUEUE_NAME, true);
+
         NewLegalEntityCustomerV2 newLegalEntityCustomerV2 = NewLegalEntityCustomerV2.builder()
                 .name("Chuck Norris Ltd")
                 .registrationCode("14447333")
                 .build();
 
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.set("traceparent", "00-4bf92f3577b34da6a3ce929d0e0e4737-00f067aa0ba902b8-01");
+        HttpEntity<?> httpEntity = new HttpEntity<>(newLegalEntityCustomerV2, httpHeaders);
+
         // when
-        ResponseEntity<LegalEntityCustomerV2> responseEntity = testRestTemplate.exchange(
-                "/internal/api/v2/customers",
-                HttpMethod.POST,
-                TestUtil.jsonHttpEntity(newLegalEntityCustomerV2),
-                LegalEntityCustomerV2.class);
+        ResponseEntity<LegalEntityCustomerV2> responseEntity = testRestTemplate
+                .exchange("/internal/api/v2/customers", HttpMethod.POST, httpEntity, LegalEntityCustomerV2.class);
 
         // then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -94,6 +116,17 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         Customer customer = customerApplicationService.getById(legalEntityCustomerV2.getId());
         assertThat(customer).isInstanceOf(LegalEntityCustomer.class);
+
+        Message message = await()
+                .until(() -> rabbitTemplate.receive(IntegrationTestConfiguration.EVENTS_QUEUE_NAME), Objects::nonNull);
+        CustomerCreatedEventV1 customerCreatedEventV1 = (CustomerCreatedEventV1) rabbitTemplate.getMessageConverter()
+                .fromMessage(message);
+        assertThat(customerCreatedEventV1).isNotNull();
+        assertThat(customerCreatedEventV1.id()).isEqualTo(customer.getId());
+
+        String traceparent = (String) message.getMessageProperties().getHeaders().get("traceparent");
+        assertThat(traceparent).isNotNull();
+        assertThat(traceparent).matches("00-4bf92f3577b34da6a3ce929d0e0e4737-[0-9a-f]{16}-01");
     }
 
     @Test
