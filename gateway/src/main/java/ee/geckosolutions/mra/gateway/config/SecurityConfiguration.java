@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.http.client.HttpClientSettings;
 import org.springframework.boot.restclient.RestTemplateBuilder;
-import org.springframework.boot.security.oauth2.server.resource.autoconfigure.servlet.JwkSetUriJwtDecoderBuilderCustomizer;
+import org.springframework.boot.security.oauth2.server.resource.autoconfigure.JwkSetUriJwtDecoderBuilderCustomizer;
 import org.springframework.boot.ssl.NoSuchSslBundleException;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
@@ -75,6 +75,7 @@ public class SecurityConfiguration {
             RestTemplateBuilder restTemplateBuilder,
             SslBundles sslBundles) {
         HttpClientSettings httpClientSettings = new HttpClientSettings(
+                null,
                 null,
                 Duration.ofMillis(JWKSourceBuilder.DEFAULT_HTTP_CONNECT_TIMEOUT),
                 Duration.ofMillis(JWKSourceBuilder.DEFAULT_HTTP_READ_TIMEOUT),

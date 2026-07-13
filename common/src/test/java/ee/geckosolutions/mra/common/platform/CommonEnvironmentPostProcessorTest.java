@@ -15,6 +15,8 @@ package ee.geckosolutions.mra.common.platform;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,6 +35,23 @@ class CommonEnvironmentPostProcessorTest {
     @BeforeEach
     void beforeEach() {
         springApplication = Mockito.spy(new SpringApplication(Object.class));
+    }
+
+    @Test
+    void shouldAddBaseDefaults() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("spring.task.execution.propagate-context")).isEqualTo(true);
+        assertThat(mapPropertySource.getProperty("management.tracing.sampling.probability")).isEqualTo(1.0);
+        assertThat(mapPropertySource.getProperty("management.otlp.metrics.export.enabled")).isEqualTo(false);
+        assertThat(mapPropertySource.getProperty("management.logging.export.otlp.enabled")).isEqualTo(false);
+        assertThat(mapPropertySource.getProperty("management.opentelemetry.tracing.export.otlp.transport")).isEqualTo("grpc");
     }
 
     @Test
@@ -119,8 +138,95 @@ class CommonEnvironmentPostProcessorTest {
         assertThat(mapPropertySource.getProperty("spring.datasource.connection-fetch")).isEqualTo("lazy");
     }
 
+    @Test
+    void shouldAddDatasourceDefaultsWhenDatasourceJndiNameConfigured() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+        configurableEnvironment.getPropertySources()
+                .addFirst(new MapPropertySource("test", Map.of("spring.datasource.jndi-name", "java:comp/env/jdbc/test")));
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("spring.datasource.connection-fetch")).isEqualTo("lazy");
+    }
+
+    @Test
+    void shouldNotAddDatasourceDefaultsWhenDatasourceIsNotConfigured() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("spring.datasource.connection-fetch")).isNull();
+    }
+
+    @Test
+    void shouldAddDatasourceObservationDefaultsWhenDatasourceObservationIsPresent() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("jdbc.hikari.enabled")).isEqualTo(false);
+    }
+
+    @Test
+    void shouldNotAddDatasourceObservationDefaultsWhenDatasourceObservationIsNotPresent() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+        given(springApplication.getClassLoader())
+                .willReturn(new FilteredClassLoader("net.ttddyy.observation.boot.autoconfigure"));
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("jdbc.hikari.enabled")).isNull();
+    }
+
+    @Test
+    void shouldAddRabbitMqDefaultsWhenRabbitAutoConfigurationIsPresent() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("spring.rabbitmq.template.observation-enabled")).isEqualTo(true);
+        assertThat(mapPropertySource.getProperty("spring.rabbitmq.listener.simple.observation-enabled")).isEqualTo(true);
+    }
+
+    @Test
+    void shouldNotAddRabbitMqDefaultsWhenRabbitAutoConfigurationIsNotPresent() {
+        // given
+        ConfigurableEnvironment configurableEnvironment = new StandardEnvironment();
+        given(springApplication.getClassLoader())
+                .willReturn(new FilteredClassLoader("org.springframework.boot.amqp.autoconfigure"));
+
+        // when
+        COMMON_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(configurableEnvironment, springApplication);
+
+        // then
+        MapPropertySource mapPropertySource = getMraSource(configurableEnvironment);
+        assertThat(mapPropertySource.getProperty("spring.rabbitmq.template.observation-enabled")).isNull();
+        assertThat(mapPropertySource.getProperty("spring.rabbitmq.listener.simple.observation-enabled")).isNull();
+    }
+
     private static MapPropertySource getMraSource(ConfigurableEnvironment configurableEnvironment) {
-        return (MapPropertySource) configurableEnvironment.getPropertySources().get("mra-defaults");
+        return (MapPropertySource) configurableEnvironment.getPropertySources()
+                .get(CommonEnvironmentPostProcessor.PROPERTY_SOURCE_NAME);
     }
 
 }

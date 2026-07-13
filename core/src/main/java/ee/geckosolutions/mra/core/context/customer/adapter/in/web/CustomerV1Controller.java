@@ -23,6 +23,10 @@ import jakarta.validation.Valid;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.core.context.customer.application.CustomerApplicationService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 
@@ -36,6 +40,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.CUSTOMER)
 @Deprecated(forRemoval = true)
 @RestController
 @RequestMapping(value = "/internal/api/v1/customers")
@@ -46,7 +51,7 @@ public class CustomerV1Controller {
     private final CustomerV1WebMapper customerV1WebMapper;
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CustomerV1> get(@PathVariable UUID id) throws Throwable {
+    public ResponseEntity<CustomerV1> get(@PathVariable UUID id) {
         CustomerV1 customerV1 = customerV1WebMapper.toCustomerV1(customerApplicationService.getById(id));
         return ResponseEntity.ok(customerV1);
     }

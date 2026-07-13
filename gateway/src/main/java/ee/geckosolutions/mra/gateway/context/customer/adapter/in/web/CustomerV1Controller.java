@@ -20,6 +20,10 @@ package ee.geckosolutions.mra.gateway.context.customer.adapter.in.web;
 import java.time.Instant;
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.gateway.adapter.in.web.ControllerSupport;
 import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
 import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCustomerV1Client;
@@ -34,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.CUSTOMER)
 @RestController
 @RequestMapping(value = "/api/v1/customers")
 @RequiredArgsConstructor

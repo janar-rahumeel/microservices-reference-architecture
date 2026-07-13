@@ -19,15 +19,23 @@ package ee.geckosolutions.mra.core.test;
 
 import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
 
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.core.TopicExchange;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.testcontainers.postgresql.PostgreSQLContainer;
+import org.testcontainers.rabbitmq.RabbitMQContainer;
 import tools.jackson.databind.JacksonModule;
 import tools.jackson.databind.module.SimpleModule;
 
 @TestConfiguration(proxyBeanMethods = false)
-class IntegrationTestConfiguration {
+public class IntegrationTestConfiguration {
+
+    public static final String EVENTS_QUEUE_NAME = "test.events";
 
     @Bean
     @ServiceConnection
@@ -36,10 +44,26 @@ class IntegrationTestConfiguration {
     }
 
     @Bean
+    @ServiceConnection
+    RabbitMQContainer rabbitMqContainer() {
+        return new RabbitMQContainer("rabbitmq:4.3-alpine");
+    }
+
+    @Bean
     JacksonModule jacksonModule() {
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addDeserializer(ErrorCode.class, new ErrorCodeDeserializer());
         return simpleModule;
+    }
+
+    @Bean
+    Queue eventsQueue() {
+        return QueueBuilder.durable(EVENTS_QUEUE_NAME).quorum().build();
+    }
+
+    @Bean
+    Binding eventsBinding(Queue eventsQueue, TopicExchange customerExchange) {
+        return BindingBuilder.bind(eventsQueue).to(customerExchange).with("event.#");
     }
 
 }

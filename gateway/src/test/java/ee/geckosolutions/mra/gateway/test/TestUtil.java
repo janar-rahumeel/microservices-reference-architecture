@@ -24,8 +24,6 @@ import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -33,8 +31,10 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TestUtil {
+public final class TestUtil {
+
+    private TestUtil() {
+    }
 
     private static final JwtEncoder JWT_ENCODER = NimbusJwtEncoder.withSecretKey(resolveJwtSecretKey())
             .algorithm(MacAlgorithm.HS256)

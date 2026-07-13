@@ -5,6 +5,15 @@ deploy-keycloak-db:
 deploy-keycloak:
 	docker compose -f ./etc/docker/docker-compose.yml up keycloak -d
 
+deploy-rabbitmq:
+	docker compose -f ./etc/docker/docker-compose.yml up rabbitmq -d
+
+deploy-tempo:
+	docker compose -f ./etc/docker/docker-compose.yml up tempo -d
+
+deploy-grafana:
+	docker compose -f ./etc/docker/docker-compose.yml up grafana -d
+
 start-ui:
 	$(MAKE) -C ui start
 
@@ -13,3 +22,6 @@ start-gateway:
 
 start-core:
 	mvn -f core/pom.xml -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=local" spring-boot:run
+
+start-worker:
+	mvn -f worker/pom.xml -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=local" spring-boot:run

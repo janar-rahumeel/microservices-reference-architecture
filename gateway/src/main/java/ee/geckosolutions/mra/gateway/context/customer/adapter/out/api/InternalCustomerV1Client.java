@@ -19,6 +19,11 @@ package ee.geckosolutions.mra.gateway.context.customer.adapter.out.api;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +32,7 @@ import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
+@Adapter(direction = AdapterDirection.OUT, type = AdapterType.REST_CLIENT, boundedContext = BoundedContext.CUSTOMER)
 @HttpExchange(url = "/internal/api/v1/customers")
 public interface InternalCustomerV1Client {
 

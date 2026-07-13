@@ -20,8 +20,12 @@ package ee.geckosolutions.mra.core.context.customer.adapter.out.persistence;
 import java.util.Optional;
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.platform.observation.Adapter;
+import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
+import ee.geckosolutions.mra.common.platform.observation.AdapterType;
+import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.core.context.customer.adapter.out.persistence.entity.CustomerEntity;
-import ee.geckosolutions.mra.core.context.customer.adapter.out.persistence.repository.JpaCustomerRepository;
+import ee.geckosolutions.mra.core.context.customer.adapter.out.persistence.repository.CustomerJpaRepository;
 import ee.geckosolutions.mra.core.context.customer.application.port.CustomerRepository;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.CustomerType;
@@ -31,31 +35,32 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+@Adapter(direction = AdapterDirection.OUT, type = AdapterType.JPA, boundedContext = BoundedContext.CUSTOMER)
 @Repository
 @RequiredArgsConstructor
-public class CustomerRepositoryImpl implements CustomerRepository {
+public class PostgresCustomerRepository implements CustomerRepository {
 
-    private final JpaCustomerRepository jpaCustomerRepository;
+    private final CustomerJpaRepository customerJpaRepository;
 
     @Override
     public Optional<Customer> findById(UUID id) {
-        return jpaCustomerRepository.findById(id).map(CustomerRepositoryImpl::toDomain);
+        return customerJpaRepository.findById(id).map(PostgresCustomerRepository::toDomain);
     }
 
     @Override
     public boolean personExistsByPersonalIdentificationCode(String personalIdentificationCode) {
-        return jpaCustomerRepository.existsByPersonalIdentificationCode(personalIdentificationCode);
+        return customerJpaRepository.existsByPersonalIdentificationCode(personalIdentificationCode);
     }
 
     @Override
     public boolean legalEntityExistsByRegistrationCode(String registrationCode) {
-        return jpaCustomerRepository.existsByRegistrationCode(registrationCode);
+        return customerJpaRepository.existsByRegistrationCode(registrationCode);
     }
 
     @Override
     public Customer create(Customer customer) {
         CustomerEntity customerEntity = toEntity(customer);
-        return toDomain(jpaCustomerRepository.save(customerEntity));
+        return toDomain(customerJpaRepository.save(customerEntity));
     }
 
     private static CustomerEntity toEntity(Customer customer) {

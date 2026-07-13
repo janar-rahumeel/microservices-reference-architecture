@@ -1,0 +1,25 @@
+$kind: http-request
+name: POST /api/v2/customers (Legal Entity)
+url: "{{base_url}}/api/v2/customers"
+method: POST
+headers:
+  Accept: application/json
+  traceparent: 00-4bf92f3577b22da1a3ce329d0e0e4457-00f067aa0ba602b1-01
+body:
+  type: json
+  content: "{\r
+
+    \  \"type\": \"LEGAL_ENTITY\",\r
+
+    \  \"name\": \"Chuck Norris Ltd\",\r
+
+    \  \"registrationCode\": \"14237343\"\r
+
+    }"
+auth:
+  type: inherit
+  credentials:
+    id: 423b0e5b-3e1e-426c-9218-8960e097774e
+settings:
+  disabledSystemHeaders: []
+order: 2000

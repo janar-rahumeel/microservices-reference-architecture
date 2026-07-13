@@ -19,9 +19,13 @@ package ee.geckosolutions.mra.core.context.customer.domain.model;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.domain.AggregateRoot;
 import ee.geckosolutions.mra.core.context.customer.domain.exception.InvalidCustomerFieldException;
 
-public abstract class Customer {
+import lombok.Getter;
+
+@Getter
+public abstract class Customer extends AggregateRoot {
 
     private final UUID id;
     private final CustomerType type;
@@ -38,14 +42,6 @@ public abstract class Customer {
                     String.format("'%s' must not be blank", fieldName));
         }
         return value;
-    }
-
-    public UUID getId() {
-        return this.id;
-    }
-
-    public CustomerType getType() {
-        return this.type;
     }
 
 }
