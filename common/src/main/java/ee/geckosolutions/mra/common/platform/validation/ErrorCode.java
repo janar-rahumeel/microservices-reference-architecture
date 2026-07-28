@@ -12,6 +12,9 @@
  */
 package ee.geckosolutions.mra.common.platform.validation;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
+@Schema(type = "string", example = "string")
 public interface ErrorCode {
 
     String getValue();

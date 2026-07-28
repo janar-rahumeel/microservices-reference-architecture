@@ -17,15 +17,9 @@
  */
 package ee.geckosolutions.mra.gateway.adapter.in.web;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.function.Supplier;
 
-import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
-
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -33,24 +27,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class ControllerSupport {
-
-    private static final DateTimeFormatter HTTP_DATE_FORMAT = DateTimeFormatter.RFC_1123_DATE_TIME.withZone(ZoneOffset.UTC);
-
-    private final ApplicationProperties applicationProperties;
-
-    public <T> ResponseEntity<T> forwardWithDeprecationHeaders(ResponseEntity<T> responseEntity, Instant deprecatedSince) {
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.add("Deprecation", "@" + deprecatedSince.getEpochSecond());
-        httpHeaders.add(
-                "Sunset",
-                HTTP_DATE_FORMAT.format(
-                        deprecatedSince.atZone(ZoneOffset.UTC)
-                                .plus(applicationProperties.getApiDeprecationSunsetPeriod())
-                                .toInstant()));
-        httpHeaders.setContentType(responseEntity.getHeaders().getContentType());
-
-        return new ResponseEntity<>(responseEntity.getBody(), httpHeaders, responseEntity.getStatusCode());
-    }
 
     public static ResponseEntity<byte[]> executeHttpRequest(Supplier<ResponseEntity<byte[]>> clientRequestSupplier) {
         ResponseEntity<byte[]> responseEntity = clientRequestSupplier.get();

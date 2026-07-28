@@ -16,6 +16,10 @@
     <name>Common Library</name>
     <description>Shared utilities, domain models, and reusable components</description>
 
+    <properties>
+        <project.root.directory>${project.parent.basedir}</project.root.directory>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>

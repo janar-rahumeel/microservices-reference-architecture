@@ -24,6 +24,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRe
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.client.MockRestServiceServer;
+import tools.jackson.databind.ObjectMapper;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = IntegrationTestConfiguration.class)
@@ -32,6 +33,9 @@ public abstract class AbstractWebIntegrationTest {
 
     @Autowired
     protected TestRestTemplate testRestTemplate;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @Autowired
     @Qualifier(IntegrationTestConfiguration.CORE_SERVICE_MOCK_REST_SERVICE_SERVER_BEAN_NAME)

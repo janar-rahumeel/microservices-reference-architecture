@@ -17,14 +17,19 @@
  */
 package ee.geckosolutions.mra.gateway.config;
 
-import java.time.Instant;
 import java.time.Period;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.http.HttpMethod;
 
 @Getter
 @Setter
@@ -32,9 +37,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class ApplicationProperties {
 
     private final InternalServices internalServices = new InternalServices();
-    private final Customer customer = new Customer();
+    private final Api api = new Api();
     private final Security security = new Security();
-    private Period apiDeprecationSunsetPeriod = Period.parse("P6M");
 
     @Getter
     @Setter
@@ -54,9 +58,10 @@ public class ApplicationProperties {
 
     @Getter
     @Setter
-    public static class Customer {
+    public static class Api {
 
-        private Instant v1ApiDeprecatedSince;
+        private final List<DeprecatedEndpoint> deprecatedEndpoints = new ArrayList<>();
+        private Period deprecationSunsetPeriod = Period.parse("P6M");
 
     }
 
@@ -66,6 +71,10 @@ public class ApplicationProperties {
 
         private String realmName;
 
+    }
+
+    public record DeprecatedEndpoint(String pathTemplate, Set<HttpMethod> methods, ZonedDateTime deprecationDate,
+            @Nullable ZonedDateTime sunsetDate, @Nullable String successorLink) {
     }
 
 }

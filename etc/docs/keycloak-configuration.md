@@ -23,7 +23,7 @@
 
 - Go to **Client scopes → Create client scope (e.g. `audience`)**
   - `Type = Default`
-  - Go to **Mappers → Add mapper → By configuration → Audience**
+  - Go to **Mappers → Add mapper → Configure a new mapper → Audience**
     - `Included Custom Audience = mra`
 
 ## 3. Enable Client Credentials (M2M)
@@ -34,6 +34,9 @@
   - `Service accounts roles = ✔`
 
 This enables the `client_credentials` grant type
+
+- Go to **Credentials**
+  - `Client Secret = mra-api-secret`
 
 ### Token Request Example
 

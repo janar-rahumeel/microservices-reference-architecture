@@ -37,8 +37,6 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
 import ee.geckosolutions.mra.gateway.test.TestUtil;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -46,10 +44,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.databind.JsonNode;
 
 class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
-
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Test
     void testThatGetCustomerV2IsSuccessful() {
@@ -140,7 +137,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     }
 
     @Test
-    void testThatInsertCustomerV2BadRequestReturnsErrorResponse() throws Exception {
+    void testThatInsertCustomerV2BadRequestReturnsErrorResponse() {
         // given
         String errorId = UUID.randomUUID().toString();
         String errorMessage = "Invalid customer payload";
@@ -172,8 +169,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String responseBody = responseEntity.getBody();
         assertThat(responseBody).isNotNull();
 
-        JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
-        assertThat(responseJson).isEqualTo(OBJECT_MAPPER.readTree("""
+        JsonNode responseJson = objectMapper.readTree(responseBody);
+        assertThat(responseJson).isEqualTo(objectMapper.readTree("""
                 {"id":"%s","errorCode":"general.technical.input-validation","message":"%s"}
                 """.formatted(errorId, errorMessage)));
 

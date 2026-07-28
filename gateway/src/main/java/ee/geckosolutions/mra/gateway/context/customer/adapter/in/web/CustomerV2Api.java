@@ -24,6 +24,7 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustome
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewPersonCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
+import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,7 +46,10 @@ public interface CustomerV2Api {
                             description = "Customer found",
                             content = @Content(
                                     schema = @Schema(oneOf = { PersonCustomerV2.class, LegalEntityCustomerV2.class }))),
-                    @ApiResponse(responseCode = "404", description = "Customer not found") })
+                    @ApiResponse(
+                            responseCode = "404",
+                            description = "Customer not found",
+                            content = @Content(schema = @Schema(implementation = ErrorResponseV2.class))) })
     Callable<ResponseEntity<byte[]>> get(UUID id);
 
     @Operation(
@@ -61,8 +65,14 @@ public interface CustomerV2Api {
                             description = "Customer created",
                             content = @Content(
                                     schema = @Schema(oneOf = { PersonCustomerV2.class, LegalEntityCustomerV2.class }))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input"),
-                    @ApiResponse(responseCode = "409", description = "Customer already exists") })
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Invalid input",
+                            content = @Content(schema = @Schema(implementation = ErrorResponseV2.class))),
+                    @ApiResponse(
+                            responseCode = "409",
+                            description = "Customer already exists",
+                            content = @Content(schema = @Schema(implementation = ErrorResponseV2.class))) })
     Callable<ResponseEntity<byte[]>> insert(@RequestBody byte[] content);
 
 }
