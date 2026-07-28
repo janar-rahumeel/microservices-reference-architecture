@@ -21,15 +21,23 @@ import java.time.Clock;
 
 import ee.geckosolutions.mra.common.platform.http.HttpClientUtil;
 import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
+import ee.geckosolutions.mra.gateway.adapter.in.web.EndpointDeprecationHandler;
 
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.PathItem;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 @EnableConfigurationProperties(ApplicationProperties.class)
@@ -38,6 +46,34 @@ public class ApplicationConfiguration {
     public static final String CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME = "coreServiceRestClientBuilder";
 
     private final ApplicationProperties applicationProperties;
+
+    @Bean
+    EndpointDeprecationHandler endpointDeprecationHandler() {
+        return EndpointDeprecationHandler.of(applicationProperties);
+    }
+
+    @Bean
+    OpenApiCustomizer deprecationOpenApiCustomizer(ApplicationProperties applicationProperties) {
+        return openApi -> applicationProperties.getApi().getDeprecatedEndpoints().forEach(deprecatedEndpoint -> {
+            PathItem pathItem = openApi.getPaths().get(deprecatedEndpoint.pathTemplate());
+
+            if (pathItem != null) {
+                deprecatedEndpoint.methods().forEach(method -> {
+                    Operation operation = pathItem.readOperationsMap().get(PathItem.HttpMethod.valueOf(method.name()));
+                    if (operation != null) {
+                        operation.setDeprecated(true);
+
+                        if (deprecatedEndpoint.successorLink() != null) {
+                            operation.setDescription(
+                                    (operation.getDescription() == null ? "" : operation.getDescription() + "\n\n")
+                                            + "**This endpoint is deprecated.** Use " + deprecatedEndpoint.successorLink()
+                                            + " instead");
+                        }
+                    }
+                });
+            }
+        });
+    }
 
     @Bean(CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME)
     RestClient.Builder coreServiceRestClientBuilder(RestClientBuilderConfigurer restClientBuilderConfigurer) {
@@ -51,6 +87,19 @@ public class ApplicationConfiguration {
     @Bean
     Clock clock() {
         return Clock.systemUTC();
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @RequiredArgsConstructor
+    static class WebConfiguration implements WebMvcConfigurer {
+
+        private final EndpointDeprecationHandler deprecationHandler;
+
+        @Override
+        public void configureApiVersioning(ApiVersionConfigurer configurer) {
+            configurer.setDeprecationHandler(deprecationHandler).setSupportedVersionPredicate(ignored -> true);
+        }
+
     }
 
 }

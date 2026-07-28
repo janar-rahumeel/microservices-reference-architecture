@@ -35,7 +35,7 @@ public interface CustomerV1Api {
 
     @Operation(
             summary = "Get customer by ID",
-            description = "Returns a single customer. **This endpoint is deprecated.** Use /api/v2/customers/{id} endpoint instead",
+            description = "Returns a single customer",
             responses = {
                     @ApiResponse(
                             responseCode = "200",
@@ -47,7 +47,7 @@ public interface CustomerV1Api {
 
     @Operation(
             summary = "Create a new customer",
-            description = "Creates a new customer. **This endpoint is deprecated.** Use /api/v2/customers endpoint instead",
+            description = "Creates a new customer",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(schema = @Schema(implementation = NewCustomerV1.class))),

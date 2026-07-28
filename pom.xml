@@ -21,6 +21,8 @@
     <properties>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.root.directory>${project.basedir}</project.root.directory>
+        <plugin.spotless.skip>false</plugin.spotless.skip>
     </properties>
 
     <modules>
@@ -81,7 +83,7 @@
                     <configuration>
                         <licenseSets>
                             <set>
-                                <header>${project.baseUri}../etc/license/open.txt</header>
+                                <header>${project.root.directory}/etc/license/open.txt</header>
                                 <properties>
                                     <year>2026</year>
                                 </properties>
@@ -107,7 +109,7 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>3.6.0</version>
                     <configuration>
-                        <configLocation>${maven.multiModuleProjectDirectory}/etc/format/checkstyle.xml</configLocation>
+                        <configLocation>${project.root.directory}/etc/format/checkstyle.xml</configLocation>
                     </configuration>
                     <executions>
                         <execution>
@@ -130,10 +132,10 @@
                             </includes>
                             <lineEndings>UNIX</lineEndings>
                             <importOrder>
-                                <file>${maven.multiModuleProjectDirectory}/etc/format/eclipse.importorder</file>
+                                <file>${project.root.directory}/etc/format/eclipse.importorder</file>
                             </importOrder>
                             <eclipse>
-                                <file>${maven.multiModuleProjectDirectory}/etc/format/eclipse-code-formatter.xml</file>
+                                <file>${project.root.directory}/etc/format/eclipse-code-formatter.xml</file>
                             </eclipse>
                             <removeUnusedImports/>
                         </java>
@@ -189,6 +191,9 @@
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
+                <configuration>
+                    <skip>${plugin.spotless.skip}</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>

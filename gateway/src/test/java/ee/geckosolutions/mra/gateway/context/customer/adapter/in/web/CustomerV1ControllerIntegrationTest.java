@@ -35,7 +35,6 @@ import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
 import ee.geckosolutions.mra.gateway.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -43,12 +42,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 
 class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Test
     void testThatGetCustomerV1IsSuccessful() {
@@ -94,6 +89,8 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
         assertThat(responseEntityHeaders.containsHeaderValue("deprecation", "@4070908800")).isTrue();
         assertThat(responseEntityHeaders.containsHeaderValue("sunset", "Wed, 1 Jul 2099 00:00:00 GMT")).isTrue();
+        assertThat(responseEntityHeaders.containsHeaderValue("link", "</api/v2/customers/{id}>; rel=\"successor-version\""))
+                .isTrue();
 
         coreServiceMockRestServiceServer.verify();
     }
@@ -133,6 +130,11 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
         // then
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        HttpHeaders responseEntityHeaders = responseEntity.getHeaders();
+        assertThat(responseEntityHeaders.containsHeaderValue("deprecation", "@4070908800")).isTrue();
+        assertThat(responseEntityHeaders.containsHeaderValue("sunset", "Wed, 1 Jul 2099 00:00:00 GMT")).isTrue();
+        assertThat(responseEntityHeaders.containsHeader("link")).isFalse();
 
         CustomerV1 customerV1 = responseEntity.getBody();
         assertThat(customerV1).isNotNull();

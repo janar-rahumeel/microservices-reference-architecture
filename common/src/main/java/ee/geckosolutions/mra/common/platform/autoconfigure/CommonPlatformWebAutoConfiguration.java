@@ -12,13 +12,20 @@
  */
 package ee.geckosolutions.mra.common.platform.autoconfigure;
 
+import java.util.function.Predicate;
+
 import ee.geckosolutions.mra.common.platform.web.DefaultExceptionHandler;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.zalando.logbook.HttpRequest;
+import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
+import org.zalando.logbook.core.Conditions;
 
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -34,6 +41,17 @@ public class CommonPlatformWebAutoConfiguration {
     @ConditionalOnMissingBean(ErrorResponseV2ExceptionHandler.class)
     ErrorResponseV2ExceptionHandler errorResponseV2ExceptionHandler() {
         return new ErrorResponseV2ExceptionHandler();
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(LogbookAutoConfiguration.class)
+    static class LogbookConfiguration {
+
+        @Bean
+        Predicate<HttpRequest> requestCondition() {
+            return Conditions.requestTo("**/api/v*/**");
+        }
+
     }
 
 }

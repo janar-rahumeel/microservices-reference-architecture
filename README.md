@@ -13,7 +13,7 @@ service configuration.
 
 ### 🔐 Security & TLS
 
-[Local TLS Setup](etc/local-tls-setup.md) -- Step CA setup, local
+[Local TLS Setup](etc/local-tls-setup.md) - Step CA setup, local
 certificate authority, and HTTPS configuration for all services
 
 ### 🔑 Identity & Authentication

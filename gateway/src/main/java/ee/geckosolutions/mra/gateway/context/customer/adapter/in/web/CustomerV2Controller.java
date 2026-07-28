@@ -46,7 +46,7 @@ public class CustomerV2Controller implements CustomerV2Api {
     private final InternalCustomerV2Client internalCustomerV2Client;
 
     @Override
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Callable<ResponseEntity<byte[]>> get(@PathVariable UUID id) {
         return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.get(id));
     }
