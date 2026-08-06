@@ -1,0 +1,334 @@
+specification {
+  element product
+  element system
+  element external {
+    style {
+      color indigo
+    }
+  }
+  element service
+  element database {
+    style {
+      shape cylinder
+    }
+  }
+  element exchange {
+    style {
+      shape rectangle
+    }
+  }
+  element queue {
+    style {
+      shape queue
+    }
+  }
+
+  tag phantom
+  tag platform
+}
+
+model {
+
+  product mra "Microservices Reference Architecture (MRA)" {
+    description "Reference platform demonstrating microservice architecture patterns"
+
+    service ui "Frontend Application" {
+      description "Web user interface"
+      icon tech:angular
+    }
+
+    external integrator "External Application" {
+      description "External integrator application"
+    }
+
+    service gateway "API Gateway" {
+      description "External API entry point"
+      icon tech:spring
+    }
+
+    service core "Core Service" {
+      description "Example Spring Boot microservice"
+      icon tech:spring
+    }
+
+    service worker "Worker Service" {
+      description "Example asynchronous Spring Boot microservice"
+      icon tech:spring
+    }
+
+    service phantomOneToN "Additional Services" {
+      #phantom
+
+      description "Indicative example of additional microservices that can be added to the architecture"
+      icon tech:spring
+    }
+
+    ui -> gateway "HTTPS"
+
+    integrator -> gateway "HTTPS"
+
+    gateway -> core "HTTP"
+    gateway -> phantomOneToN "HTTP"
+
+    core -> worker "AMQP (async)"
+
+  }
+
+
+  system platform "Operational Platform" {
+    description "Shared infrastructure services used by MRA"
+
+    //
+    // Identity
+    //
+
+    system identity "Identity Platform" {
+
+      service keycloak "Keycloak" {
+        description "OAuth2 / OpenID Connect provider"
+        icon tech:spring
+      }
+
+      database keycloakDatabase "Keycloak PostgreSQL" {
+        description "Identity data"
+        icon tech:postgresql
+      }
+
+      keycloak -> keycloakDatabase "JDBC"
+    }
+
+
+    //
+    // Messaging
+    //
+
+    system messaging "Messaging Platform" {
+
+      service rabbitmq "RabbitMQ" {
+        description "Message broker"
+        icon tech:rabbitmq
+
+        exchange domainExchange "Domain Exchange" {
+          description "Routes domain events to queues"
+        }
+
+        queue workerQueue "Worker Queue" {
+          description "Queue consumed by Worker Service"
+        }
+
+        queue phantomQueue "Additional Service Queues" {
+          #phantom
+
+          description "Indicative queue used by additional asynchronous services"
+        }
+
+        domainExchange -> workerQueue "Routes events"
+        domainExchange -> phantomQueue "Routes events"
+
+      }
+
+    }
+
+    //
+    // Database
+    //
+
+    system database "Database Platform" {
+      description "Database infrastructure provided by the operational platform"
+
+      database coreDatabase "Core Service PostgreSQL" {
+        description "Business data storage"
+        icon tech:postgresql
+      }
+
+      database phantomOneToNDatabase "Additional Services PostgreSQL" {
+        #phantom
+
+        description "Indicative database for additional microservices"
+        icon tech:postgresql
+      }
+
+    }
+
+    //
+    // Observability
+    //
+
+    system observability "Observability Platform" {
+
+      service elasticsearch "Elasticsearch" {
+        description "Log storage and indexing"
+        icon tech:elasticsearch
+      }
+
+      service kibana "Kibana" {
+        description "Log exploration and visualization"
+        icon tech:kibana
+      }
+
+      service prometheus "Prometheus" {
+        description "Metrics collection"
+        icon tech:prometheus
+      }
+
+      service blackbox "Blackbox Exporter" {
+        description "HTTP endpoint availability monitoring"
+        icon tech:prometheus
+      }
+
+      service grafana "Grafana" {
+        description "Dashboards and visualization"
+        icon tech:grafana
+      }
+
+      service tempo "Tempo" {
+        description "Distributed tracing backend"
+        icon tech:grafana
+      }
+
+      kibana -> elasticsearch "Queries logs"
+
+      prometheus -> blackbox "Scrapes Blackbox metrics"
+
+      grafana -> prometheus "Queries metrics"
+      grafana -> tempo "Queries traces"
+
+    }
+  }
+
+
+  //
+  // Identity
+  //
+
+  mra.gateway -> platform.identity.keycloak "OIDC authentication"
+
+  //
+  // Databases
+  //
+
+  mra.core -> platform.database.coreDatabase "JDBC"
+
+  mra.phantomOneToN -> platform.database.phantomOneToNDatabase "JDBC"
+
+  //
+  // Messaging
+  //
+
+  mra.core -> platform.messaging.rabbitmq.domainExchange "Publishes domain events"
+
+  mra.phantomOneToN -> platform.messaging.rabbitmq.domainExchange "Publishes domain events"
+
+  platform.messaging.rabbitmq.workerQueue -> mra.worker "Delivers events"
+
+  platform.messaging.rabbitmq.phantomQueue -> mra.phantomOneToN "Delivers events"
+
+
+  //
+  // Logging
+  //
+
+  mra.gateway -> platform.observability.elasticsearch "Ships logs"
+
+  mra.core -> platform.observability.elasticsearch "Ships logs"
+
+  mra.worker -> platform.observability.elasticsearch "Ships logs"
+
+  mra.phantomOneToN -> platform.observability.elasticsearch "Ships logs"
+
+
+  //
+  // Metrics
+  //
+
+  mra.gateway -> platform.observability.prometheus "Exposes Prometheus metrics"
+
+  mra.core -> platform.observability.prometheus "Exposes Prometheus metrics"
+
+  mra.worker -> platform.observability.prometheus "Exposes Prometheus metrics"
+
+  mra.phantomOneToN -> platform.observability.prometheus "Exposes Prometheus metrics"
+
+
+  //
+  // Health
+  //
+
+  mra.gateway -> platform.observability.blackbox "Exposes health endpoint"
+
+  mra.core -> platform.observability.blackbox "Exposes health endpoint"
+
+  mra.worker -> platform.observability.blackbox "Exposes health endpoint"
+
+  mra.phantomOneToN -> platform.observability.blackbox "Exposes health endpoint"
+
+
+  //
+  // Tracing
+  //
+
+  mra.gateway -> platform.observability.tempo "Exports traces"
+
+  mra.core -> platform.observability.tempo "Exports traces"
+
+  mra.worker -> platform.observability.tempo "Exports traces"
+
+  mra.phantomOneToN -> platform.observability.tempo "Exports traces"
+}
+
+views {
+
+  style element.tag = #phantom {
+    multiple true
+    color muted
+    opacity 25%
+    notation "Indicative / extensible component"
+  }
+
+  view landscape {
+    title "MRA Product Landscape"
+
+    include *
+
+    autoLayout TopBottom
+  }
+
+  view mraProduct {
+    title "MRA Product Architecture"
+
+    include mra.*
+
+    autoLayout TopBottom
+  }
+
+  view platform {
+    title "Operational Platform"
+
+    include platform.*
+    include platform.identity.*
+    include platform.database.*
+    include platform.messaging.*
+    include platform.observability.*
+
+    autoLayout TopBottom
+  }
+
+  view rabbitmq of platform.messaging.rabbitmq {
+    include *
+
+    autoLayout TopBottom
+  }
+
+  view runtime {
+    title "Runtime Dependencies"
+
+    include mra.*
+    include platform.*
+    include platform.identity.*
+    include platform.database.*
+    include platform.messaging.*
+    include platform.observability.*
+
+    autoLayout TopBottom
+  }
+}

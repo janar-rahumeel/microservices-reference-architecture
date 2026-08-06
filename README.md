@@ -3,13 +3,13 @@
 Reference implementation of a production-ready microservices
 architecture demonstrating best practices, event-driven communication,
 service integration patterns, and observability. Services are
-implemented with Spring Boot and communicate via RabbitMQ.
+implemented with Spring Boot and communicate via RabbitMQ
 
 ## Local Environment Setup
 
 This repository includes a complete local environment setup guide
 covering TLS, certificates, identity, messaging, observability, and
-service configuration.
+service configuration
 
 ### 🔐 Security & TLS
 
@@ -28,7 +28,7 @@ make deploy-keycloak
 URL: https://kc.mra.local:9443
 
 See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC
-configuration.
+configuration
 
 ### 🐇 Messaging (RabbitMQ)
 
@@ -107,3 +107,18 @@ make start-worker
 ```
 
 No public URL
+
+## Architecture
+
+The architecture is maintained as **Architecture as Code** using LikeC4
+
+```bash
+make start-likec4
+```
+
+Viewer URL: http://localhost:5173
+
+The diagrams include product, operational platform, RabbitMQ, and runtime dependency views
+
+The LikeC4 model is defined in `/etc/c4/architecture.c4`
+

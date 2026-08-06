@@ -31,3 +31,6 @@ start-core:
 
 start-worker:
 	mvn -f worker/pom.xml -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=local" spring-boot:run
+
+start-c4:
+	docker compose -f ./etc/docker/docker-compose.yaml up likec4 -d
