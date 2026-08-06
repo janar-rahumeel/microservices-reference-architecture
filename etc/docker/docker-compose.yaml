@@ -76,8 +76,21 @@ services:
       - prometheus
       - tempo
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./data/grafana:/var/lib/grafana
+
+  likec4:
+    image: likec4/likec4:1.59
+    ports:
+      - "5173:5173"
+      - "24700:24700"
+    environment:
+      CHOKIDAR_USEPOLLING: 1
+      CHOKIDAR_INTERVAL: 200
+      HMR_PORT: 24700
+    volumes:
+      - ../c4:/data
+    command: start
