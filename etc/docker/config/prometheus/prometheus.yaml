@@ -11,15 +11,15 @@ scrape_configs:
       - targets:
           - http://host.docker.internal:8243/internal/actuator/health
         labels:
-          application: gateway
+          service_name: gateway
       - targets:
           - http://host.docker.internal:8244/internal/actuator/health
         labels:
-          application: core
+          service_name: core
       - targets:
           - http://host.docker.internal:8245/internal/actuator/health
         labels:
-          application: worker
+          service_name: worker
     relabel_configs:
       - source_labels: [ __address__ ]
         target_label: __param_target

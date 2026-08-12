@@ -19,12 +19,14 @@ import java.util.Map;
 
 import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
 import ee.geckosolutions.mra.common.platform.observation.CommonObservationAspect;
+import ee.geckosolutions.mra.common.platform.observation.EcsLoggingDomainEventListener;
 
 import io.micrometer.context.ContextSnapshotFactory;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.support.converter.DefaultJacksonJavaTypeMapper;
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -37,8 +39,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.zalando.logbook.Logbook;
 import org.zalando.logbook.Strategy;
+import org.zalando.logbook.StructuredHttpLogFormatter;
 import org.zalando.logbook.autoconfigure.LogbookProperties;
 import org.zalando.logbook.core.BodyOnlyIfStatusAtLeastStrategy;
+import org.zalando.logbook.ecs.EcsSink;
+import org.zalando.logbook.ecs.EcsStructuredHttpLogFormatter;
 import org.zalando.logbook.servlet.AsyncCompletionDecorator;
 import org.zalando.logbook.servlet.CustomLogbookFilter;
 import org.zalando.logbook.servlet.MicrometerAsyncCompletionDecorator;
@@ -46,8 +51,13 @@ import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
-@AutoConfiguration
+@AutoConfiguration(beforeName = "org.zalando.logbook.ecs.autoconfigure.LogbookEcsAutoConfiguration")
 public class CommonPlatformAutoConfiguration {
+
+    @Bean
+    EcsLoggingDomainEventListener ecsLoggingDomainEventListener() {
+        return new EcsLoggingDomainEventListener();
+    }
 
     @Bean
     @ConditionalOnProperty(value = "application.common.observation.enabled", havingValue = "true", matchIfMissing = true)
@@ -58,6 +68,17 @@ public class CommonPlatformAutoConfiguration {
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(Strategy.class)
     static class LogbookConfiguration {
+
+        @Bean
+        StructuredHttpLogFormatter ecsStructuredHttpLogFormatter(
+                ObjectProvider<LogbookProperties> logbookPropertiesObjectProvider) {
+            return new EcsStructuredHttpLogFormatter(logbookPropertiesObjectProvider);
+        }
+
+        @Bean
+        EcsSink ecsSink(StructuredHttpLogFormatter structuredHttpLogFormatter) {
+            return new EcsSink(structuredHttpLogFormatter);
+        }
 
         @Bean
         @ConditionalOnProperty(value = "logbook.strategy", havingValue = "body-only-if-status-at-least", matchIfMissing = true)

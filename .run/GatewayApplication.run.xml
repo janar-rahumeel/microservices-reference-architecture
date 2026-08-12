@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="GatewayApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <option name="ACTIVE_PROFILES" value="local" />
+    <module name="microservices-reference-architecture-gateway" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="ee.geckosolutions.mra.gateway.GatewayApplication" />
+    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$/gateway" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

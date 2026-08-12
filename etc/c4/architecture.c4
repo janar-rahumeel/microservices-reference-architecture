@@ -71,7 +71,6 @@ model {
     gateway -> phantomOneToN "HTTP"
 
     core -> worker "AMQP (async)"
-
   }
 
 
@@ -94,7 +93,7 @@ model {
         icon tech:postgresql
       }
 
-      keycloak -> keycloakDatabase "JDBC"
+      keycloak -> keycloakDatabase "Identity data"
     }
 
 
@@ -122,12 +121,11 @@ model {
           description "Indicative queue used by additional asynchronous services"
         }
 
-        domainExchange -> workerQueue "Routes events"
-        domainExchange -> phantomQueue "Routes events"
-
+        domainExchange -> workerQueue "Domain events"
+        domainExchange -> phantomQueue "Domain events"
       }
-
     }
+
 
     //
     // Database
@@ -147,14 +145,19 @@ model {
         description "Indicative database for additional microservices"
         icon tech:postgresql
       }
-
     }
+
 
     //
     // Observability
     //
 
     system observability "Observability Platform" {
+
+      service elasticAgent "Elastic Agent" {
+        description "Collects application logs and forwards them to Elasticsearch"
+        icon tech:elasticsearch
+      }
 
       service elasticsearch "Elasticsearch" {
         description "Log storage and indexing"
@@ -186,13 +189,14 @@ model {
         icon tech:grafana
       }
 
-      kibana -> elasticsearch "Queries logs"
+      elasticAgent -> elasticsearch "Log streams"
 
-      prometheus -> blackbox "Scrapes Blackbox metrics"
+      elasticsearch -> kibana "Log queries"
 
-      grafana -> prometheus "Queries metrics"
-      grafana -> tempo "Queries traces"
+      blackbox -> prometheus "Probe metrics"
 
+      prometheus -> grafana "Metric queries"
+      tempo -> grafana "Trace queries"
     }
   }
 
@@ -201,80 +205,85 @@ model {
   // Identity
   //
 
-  mra.gateway -> platform.identity.keycloak "OIDC authentication"
+  mra.gateway -> platform.identity.keycloak "Authentication requests"
+
+  platform.identity.keycloak -> mra.gateway "Authentication tokens"
+
 
   //
   // Databases
   //
 
-  mra.core -> platform.database.coreDatabase "JDBC"
+  mra.core -> platform.database.coreDatabase "Business data"
 
-  mra.phantomOneToN -> platform.database.phantomOneToNDatabase "JDBC"
+  mra.phantomOneToN -> platform.database.phantomOneToNDatabase "Business data"
+
 
   //
   // Messaging
   //
 
-  mra.core -> platform.messaging.rabbitmq.domainExchange "Publishes domain events"
+  mra.core -> platform.messaging.rabbitmq.domainExchange "Domain events"
 
-  mra.phantomOneToN -> platform.messaging.rabbitmq.domainExchange "Publishes domain events"
+  mra.phantomOneToN -> platform.messaging.rabbitmq.domainExchange "Domain events"
 
-  platform.messaging.rabbitmq.workerQueue -> mra.worker "Delivers events"
+  platform.messaging.rabbitmq.workerQueue -> mra.worker "Domain events"
 
-  platform.messaging.rabbitmq.phantomQueue -> mra.phantomOneToN "Delivers events"
+  platform.messaging.rabbitmq.phantomQueue -> mra.phantomOneToN "Domain events"
 
 
   //
   // Logging
   //
 
-  mra.gateway -> platform.observability.elasticsearch "Ships logs"
+  mra.gateway -> platform.observability.elasticAgent "Application logs"
 
-  mra.core -> platform.observability.elasticsearch "Ships logs"
+  mra.core -> platform.observability.elasticAgent "Application logs"
 
-  mra.worker -> platform.observability.elasticsearch "Ships logs"
+  mra.worker -> platform.observability.elasticAgent "Application logs"
 
-  mra.phantomOneToN -> platform.observability.elasticsearch "Ships logs"
+  mra.phantomOneToN -> platform.observability.elasticAgent "Application logs"
 
 
   //
   // Metrics
   //
 
-  mra.gateway -> platform.observability.prometheus "Exposes Prometheus metrics"
+  mra.gateway -> platform.observability.prometheus "Metrics"
 
-  mra.core -> platform.observability.prometheus "Exposes Prometheus metrics"
+  mra.core -> platform.observability.prometheus "Metrics"
 
-  mra.worker -> platform.observability.prometheus "Exposes Prometheus metrics"
+  mra.worker -> platform.observability.prometheus "Metrics"
 
-  mra.phantomOneToN -> platform.observability.prometheus "Exposes Prometheus metrics"
+  mra.phantomOneToN -> platform.observability.prometheus "Metrics"
 
 
   //
   // Health
   //
 
-  mra.gateway -> platform.observability.blackbox "Exposes health endpoint"
+  mra.gateway -> platform.observability.blackbox "Health status"
 
-  mra.core -> platform.observability.blackbox "Exposes health endpoint"
+  mra.core -> platform.observability.blackbox "Health status"
 
-  mra.worker -> platform.observability.blackbox "Exposes health endpoint"
+  mra.worker -> platform.observability.blackbox "Health status"
 
-  mra.phantomOneToN -> platform.observability.blackbox "Exposes health endpoint"
+  mra.phantomOneToN -> platform.observability.blackbox "Health status"
 
 
   //
   // Tracing
   //
 
-  mra.gateway -> platform.observability.tempo "Exports traces"
+  mra.gateway -> platform.observability.tempo "Traces"
 
-  mra.core -> platform.observability.tempo "Exports traces"
+  mra.core -> platform.observability.tempo "Traces"
 
-  mra.worker -> platform.observability.tempo "Exports traces"
+  mra.worker -> platform.observability.tempo "Traces"
 
-  mra.phantomOneToN -> platform.observability.tempo "Exports traces"
+  mra.phantomOneToN -> platform.observability.tempo "Traces"
 }
+
 
 views {
 
@@ -320,7 +329,7 @@ views {
   }
 
   view runtime {
-    title "Runtime Dependencies"
+    title "Runtime Data Flow"
 
     include mra.*
     include platform.*

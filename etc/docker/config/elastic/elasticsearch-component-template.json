@@ -1,0 +1,23 @@
+{
+  "template": {
+    "mappings": {
+      "dynamic_templates": [
+        {
+          "mra_strings": {
+            "path_match": "mra.*",
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "mra": {
+          "type": "object",
+          "dynamic": true
+        }
+      }
+    }
+  }
+}

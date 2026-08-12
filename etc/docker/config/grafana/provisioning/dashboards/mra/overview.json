@@ -4,25 +4,25 @@
   "metadata": {
     "name": "adqdrv7",
     "namespace": "default",
-    "uid": "91401dec-7a34-4a0c-8235-c393a35ba681",
-    "resourceVersion": "1785908432716007",
-    "generation": 14,
-    "creationTimestamp": "2026-08-03T18:44:48Z",
+    "uid": "12c5b6f3-b9c1-42f2-a8d1-265b14fd3b2c",
+    "resourceVersion": "1787296838890993",
+    "generation": 2,
+    "creationTimestamp": "2026-08-19T19:24:21Z",
     "labels": {
-      "grafana.app/deprecatedInternalID": "3527464436822016"
+      "grafana.app/deprecatedInternalID": "487715673833472"
     },
     "annotations": {
-      "grafana.app/createdBy": "user:afu1km2etgqo0d",
-      "grafana.app/folder": "dfu8ja84ea3uoc",
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/folder": "afvnts45sre2of",
       "grafana.app/managedBy": "classic-file-provisioning",
       "grafana.app/managerId": "MRA",
-      "grafana.app/sourceChecksum": "4c0eef48b2ed395ff84a1c0f8b66a108",
+      "grafana.app/sourceChecksum": "60138b0053a083b379e37713ff9fc522",
       "grafana.app/sourcePath": "/etc/grafana/provisioning/dashboards/mra/overview.json",
-      "grafana.app/sourceTimestamp": "1785874643000",
+      "grafana.app/sourceTimestamp": "1787296784000",
       "grafana.app/updatedBy": "access-policy:service",
-      "grafana.app/updatedTimestamp": "2026-08-05T05:40:32Z",
+      "grafana.app/updatedTimestamp": "2026-08-21T07:20:38Z",
       "grafana.app/folderTitle": "Microservices Reference Architecture",
-      "grafana.app/folderUrl": "/dashboards/f/dfu8ja84ea3uoc/microservices-reference-architecture"
+      "grafana.app/folderUrl": "/dashboards/f/afvnts45sre2of/microservices-reference-architecture"
     }
   },
   "spec": {
@@ -69,7 +69,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "sum by (application) (process_cpu_usage * 100)",
+                        "expr": "sum by (service_name) (process_cpu_usage * 100)",
                         "legendFormat": "__auto",
                         "range": true
                       },
@@ -139,14 +139,14 @@
                 "segmentCount": 63,
                 "segmentSpacing": 0.3,
                 "shape": "gauge",
-                "showThresholdLabels": false,
+                "showThresholdLabels": true,
                 "showThresholdMarkers": true,
                 "sizing": "auto",
                 "sparkline": false,
                 "textMode": "auto"
               }
             },
-            "version": "13.1.1"
+            "version": "13.1.4"
           }
         }
       },
@@ -169,7 +169,7 @@
                       "kind": "DataQuery",
                       "spec": {
                         "editorMode": "code",
-                        "expr": "100 *\r\nsum by (application) (\r\n  jvm_memory_used_bytes\r\n)\r\n/\r\nsum by (application) (\r\n  jvm_memory_max_bytes\r\n)",
+                        "expr": "100 *\r\nsum by (service_name) (\r\n  jvm_memory_used_bytes\r\n)\r\n/\r\nsum by (service_name) (\r\n  jvm_memory_max_bytes\r\n)",
                         "legendFormat": "__auto",
                         "range": true
                       },
@@ -239,14 +239,14 @@
                 "segmentCount": 63,
                 "segmentSpacing": 0.3,
                 "shape": "gauge",
-                "showThresholdLabels": false,
+                "showThresholdLabels": true,
                 "showThresholdMarkers": true,
                 "sizing": "auto",
                 "sparkline": false,
                 "textMode": "auto"
               }
             },
-            "version": "13.1.1"
+            "version": "13.1.4"
           }
         }
       },
@@ -270,7 +270,7 @@
                       "spec": {
                         "editorMode": "code",
                         "exemplar": false,
-                        "expr": "sum by (application) (jvm_memory_used_bytes)",
+                        "expr": "sum by (service_name) (jvm_memory_used_bytes)",
                         "format": "time_series",
                         "instant": false,
                         "legendFormat": "__auto",
@@ -340,7 +340,7 @@
                 "wideLayout": true
               }
             },
-            "version": "13.1.1"
+            "version": "13.1.4"
           }
         }
       },
@@ -364,7 +364,7 @@
                       "spec": {
                         "editorMode": "code",
                         "expr": "probe_success",
-                        "legendFormat": "{{application}}",
+                        "legendFormat": "{{service_name}}",
                         "range": true
                       },
                       "version": "v0"
@@ -388,6 +388,7 @@
               "fieldConfig": {
                 "defaults": {
                   "color": {
+                    "fixedColor": "#ad46ff",
                     "mode": "thresholds"
                   },
                   "mappings": [
@@ -424,8 +425,8 @@
                 "overrides": []
               },
               "options": {
-                "colorMode": "value",
-                "graphMode": "area",
+                "colorMode": "background",
+                "graphMode": "none",
                 "justifyMode": "center",
                 "orientation": "auto",
                 "percentChangeColorMode": "standard",
@@ -441,7 +442,7 @@
                 "wideLayout": true
               }
             },
-            "version": "13.1.1"
+            "version": "13.1.4"
           }
         }
       }
@@ -496,7 +497,7 @@
                         },
                         "repeat": {
                           "mode": "variable",
-                          "value": "applications"
+                          "value": "service_names"
                         }
                       }
                     }
@@ -524,6 +525,10 @@
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-4"
+                        },
+                        "repeat": {
+                          "mode": "variable",
+                          "value": "service_names"
                         }
                       }
                     }
@@ -552,6 +557,10 @@
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-5"
+                        },
+                        "repeat": {
+                          "mode": "variable",
+                          "value": "service_names"
                         }
                       }
                     }
@@ -602,6 +611,45 @@
       "to": "now"
     },
     "title": "Microservices Overview",
-    "variables": []
+    "variables": [
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "allowCustomValue": false,
+          "current": {
+            "text": [
+              "core"
+            ],
+            "value": [
+              "core"
+            ]
+          },
+          "definition": "label_values(probe_success{job=\"blackbox\"},service_name)",
+          "hide": "hideVariable",
+          "includeAll": false,
+          "multi": true,
+          "name": "service_names",
+          "options": [],
+          "query": {
+            "datasource": {
+              "name": "prometheus"
+            },
+            "group": "prometheus",
+            "kind": "DataQuery",
+            "spec": {
+              "qryType": 1,
+              "query": "label_values(probe_success{job=\"blackbox\"},service_name)",
+              "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "version": "v0"
+          },
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "regexApplyTo": "value",
+          "skipUrlSync": false,
+          "sort": "disabled"
+        }
+      }
+    ]
   }
 }

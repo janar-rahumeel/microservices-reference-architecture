@@ -25,10 +25,9 @@ make deploy-keycloak-db
 make deploy-keycloak
 ```
 
-URL: https://kc.mra.local:9443
+URL: https://kc.mra.local:9443 (credentials mra:mra123)
 
-See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC
-configuration
+See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC configuration
 
 ### 🐇 Messaging (RabbitMQ)
 
@@ -49,28 +48,46 @@ keys, enabling reliable, loosely coupled, event-driven workflows
 Start the observability stack:
 
 ``` bash
-make deploy-tempo
-make deploy-grafana
+make deploy-grafana 
+make deploy-elastic-agent
 ```
 
 #### Grafana
 
-URL: http://localhost:9445
+URL: http://localhost:9445 (credentials mra:mra123)
 
-Grafana provides dashboards for application metrics, distributed traces,
-and infrastructure monitoring
+Grafana provides dashboards for application metrics, distributed traces, and infrastructure monitoring
+
+#### Prometheus
+
+URL: http://localhost:9444
+
+Prometheus scrapes metrics exposed by Spring Boot Actuator endpoints, Blackbox Exporter and
+stores them for visualization and alerting in Grafana
+
+#### Blackbox Exporter
+
+Blackbox Exporter performs external endpoint and service health probes and exposes the probe results as Prometheus metrics
 
 #### Tempo
 
 Tempo receives distributed traces from Spring Boot applications via
 OpenTelemetry, enabling end-to-end tracing across services
 
-#### Prometheus (including Blackbox Exporter)
+#### Kibana
 
-URL: http://localhost:9444
+URL: http://localhost:9446 (credentials mra:mra123)
 
-Prometheus scrapes metrics exposed by Spring Boot Actuator endpoints and
-stores them for visualization and alerting in Grafana
+Kibana provides log exploration, search, and visualization for logs stored in Elasticsearch
+
+#### Elasticsearch
+
+Elasticsearch stores structured application logs in ECS format and
+provides the backend for log search and analysis
+
+#### Elastic Agent
+
+Elastic Agent collects Spring Boot ECS-structured application logs and forwards them to Elasticsearch
 
 ### 🧩 Start Applications
 
@@ -112,7 +129,7 @@ No public URL
 
 The architecture is maintained as **Architecture as Code** using LikeC4
 
-```bash
+``` bash
 make start-likec4
 ```
 

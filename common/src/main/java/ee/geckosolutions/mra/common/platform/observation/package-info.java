@@ -10,12 +10,5 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-package ee.geckosolutions.mra.common.domain;
-
-public interface DomainEvent<ID> {
-
-    ID id();
-
-    DomainEventType type();
-
-}
+@org.jspecify.annotations.NullMarked
+package ee.geckosolutions.mra.common.platform.observation;
