@@ -20,7 +20,13 @@ package ee.geckosolutions.mra.core.context.customer.domain.event;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.domain.DomainEvent;
+import ee.geckosolutions.mra.common.domain.DomainEventType;
 
 public record CustomerCreatedEvent(UUID id) implements DomainEvent<UUID> {
+
+    @Override
+    public DomainEventType type() {
+        return DomainEventType.CREATE;
+    }
 
 }

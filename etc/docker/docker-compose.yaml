@@ -21,15 +21,14 @@ services:
       KC_DB_URL_DATABASE: keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: mra
+      KC_BOOTSTRAP_ADMIN_PASSWORD: mra123
       KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/tls.key
       KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/tls.crt
       KC_HOSTNAME: kc.mra.local
     volumes:
       - ../../etc/certificate/mra.crt:/opt/keycloak/certs/tls.crt
       - ../../etc/certificate/mra.key:/opt/keycloak/certs/tls.key
-      - ./data/keycloak:/opt/keycloak/data
     command:
       - start
 
@@ -52,35 +51,125 @@ services:
 
   prometheus:
     image: prom/prometheus:v3.13.0
-    ports:
-      - "9444:9090"
     depends_on:
       - blackbox
+    ports:
+      - "9444:9090"
     volumes:
       - ./config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
 
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.9.5
     ports:
       - "3200:3200"
       - "4317:4317"
     volumes:
-      - ./config/tempo/tempo.yaml:/etc/config.yaml:ro
+      - ./config/grafana/tempo.yaml:/etc/config.yaml:ro
       - ./data/tempo:/tmp/tempo
+    command:
+      - "-config.file=/etc/config.yaml"
 
   grafana:
-    image: grafana/grafana:13.1
-    ports:
-      - "9445:3000"
+    image: grafana/grafana:13.1.4
     depends_on:
       - prometheus
       - tempo
+    ports:
+      - "9445:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: mra
+      GF_SECURITY_ADMIN_PASSWORD: mra123
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./data/grafana:/var/lib/grafana
+
+  elasticsearch:
+    image: elastic/elasticsearch:9.5.0
+    environment:
+      ES_SETTING_DISCOVERY_TYPE: single-node
+      ES_SETTING_XPACK_SECURITY_ENABLED: true
+      ES_PORT: 0.0.0.0:9200
+      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      ELASTIC_PASSWORD: elastic_secret
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fsS -u elastic:elastic_secret 'http://elasticsearch:9200/_cluster/health?wait_for_status=yellow'"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  elasticsearch-setup:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      ELASTIC_USERNAME: elastic
+      ELASTIC_PASSWORD: elastic_secret
+      KIBANA_USERNAME: kibana_system
+      KIBANA_PASSWORD: kibana_system_secret
+      MRA_USERNAME: mra
+      MRA_PASSWORD: mra123
+    volumes:
+      - ./config/elastic/elasticsearch-setup.sh:/config/setup.sh:ro
+      - ./config/elastic/elasticsearch-component-template.json:/config/component-template.json:ro
+      - ./config/elastic/elasticsearch-index-template.json:/config/index-template.json:ro
+    entrypoint: [ "/bin/sh", "/config/setup.sh" ]
+    restart: "no"
+
+  kibana:
+    image: elastic/kibana:9.5.0
+    depends_on:
+      elasticsearch-setup:
+        condition: service_completed_successfully
+    ports:
+      - "9446:5601"
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: kibana_system_secret
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: 7F3A91C4E82D5B106AC9F731D8452E0B4D8C217FA69035BE1C7A92D4F08E6B53
+      XPACK_REPORTING_ENCRYPTIONKEY: A81D4E729C063FB5E1428A97D6C30F51E7B2A4C89D10F6358F4E1C9A72B5D803
+      XPACK_SECURITY_ENCRYPTIONKEY: 3C9F0A72E5B184D63A8F2C917D4E6B30D71E5A924C8F3B106AD6792E41F05C87
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -fs http://kibana:5601/api/status"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  kibana-setup:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      kibana:
+        condition: service_healthy
+    environment:
+      KIBANA_USERNAME: elastic
+      KIBANA_PASSWORD: elastic_secret
+    volumes:
+      - ./config/elastic/kibana-setup.sh:/config/setup.sh:ro
+      - ./config/elastic/kibana-saved-objects.ndjson:/config/saved-objects.ndjson:ro
+    entrypoint: [ "/bin/sh", "/config/setup.sh" ]
+    restart: "no"
+
+  elastic-agent:
+    image: elastic/elastic-agent:9.5.0
+    depends_on:
+      kibana-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./config/elastic/agent.yaml:/usr/share/elastic-agent/elastic-agent.yml:ro
+      - ../../target/logs:/logs:ro
 
   likec4:
     image: likec4/likec4:1.59

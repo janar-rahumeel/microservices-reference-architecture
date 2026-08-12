@@ -47,11 +47,12 @@ class CommonEnvironmentPostProcessorTest {
         MapPropertySource mapPropertySource = getMraSource(environment);
         assertThat(mapPropertySource).isNotNull();
         assertThat(mapPropertySource.getProperty("spring.task.execution.propagate-context")).isEqualTo(true);
+        assertThat(mapPropertySource.getProperty("logbook.ecs.custom-namespace-prefix")).isEqualTo("mra");
         assertThat(mapPropertySource.getProperty("management.tracing.sampling.probability")).isEqualTo(1.0);
         assertThat(mapPropertySource.getProperty("management.otlp.metrics.export.enabled")).isEqualTo(false);
         assertThat(mapPropertySource.getProperty("management.logging.export.otlp.enabled")).isEqualTo(false);
         assertThat(mapPropertySource.getProperty("management.opentelemetry.tracing.export.otlp.transport")).isEqualTo("grpc");
-        assertThat(mapPropertySource.getProperty("management.metrics.tags.application"))
+        assertThat(mapPropertySource.getProperty("management.metrics.tags.service_name"))
                 .isEqualTo("${spring.application.name}");
         assertThat(mapPropertySource.getProperty("management.endpoints.web.base-path")).isEqualTo("/internal/actuator");
         assertThat(mapPropertySource.getProperty("management.endpoints.web.exposure.include"))

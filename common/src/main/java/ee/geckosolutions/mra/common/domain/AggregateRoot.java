@@ -18,14 +18,14 @@ import java.util.Objects;
 
 public abstract class AggregateRoot {
 
-    private final List<DomainEvent> domainEvents = new ArrayList<>();
+    private final List<DomainEvent<?>> domainEvents = new ArrayList<>();
 
-    protected void registerEvent(DomainEvent domainEvent) {
+    protected void registerEvent(DomainEvent<?> domainEvent) {
         this.domainEvents.add(Objects.requireNonNull(domainEvent, "Domain event must not be null"));
     }
 
-    public List<DomainEvent> drainDomainEvents() {
-        List<DomainEvent> copyOfDomainEvents = List.copyOf(domainEvents);
+    public List<DomainEvent<?>> drainDomainEvents() {
+        List<DomainEvent<?>> copyOfDomainEvents = List.copyOf(domainEvents);
         domainEvents.clear();
         return copyOfDomainEvents;
     }

@@ -28,7 +28,9 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
         Map<String, Object> defaultProperties = new HashMap<>();
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.core.spring.task.execution.propagate-context
         defaultProperties.put("spring.task.execution.propagate-context", true);
+        defaultProperties.put("logbook.ecs.custom-namespace-prefix", "mra");
 
         if (managementDefaultsEnabled(configurableEnvironment)) {
             defaultProperties.putAll(managementDefaultProperties());
@@ -88,7 +90,7 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
                 false,
                 "management.opentelemetry.tracing.export.otlp.transport",
                 "grpc",
-                "management.metrics.tags.application",
+                "management.metrics.tags.service_name",
                 "${spring.application.name}",
                 "management.endpoints.web.base-path",
                 "/internal/actuator",
@@ -133,7 +135,8 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     private static Map<String, Object> rabbitMqDefaultProperties() {
-        //
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.integration.spring.rabbitmq.template.observation-enabled
+        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.integration.spring.rabbitmq.listener.simple.observation-enabled
         return Map.of(
                 "spring.rabbitmq.template.observation-enabled",
                 true,

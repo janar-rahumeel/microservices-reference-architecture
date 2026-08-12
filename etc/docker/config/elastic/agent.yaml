@@ -1,0 +1,31 @@
+outputs:
+  default:
+    type: elasticsearch
+    hosts:
+      - "http://elasticsearch:9200"
+    username: elastic
+    password: elastic_secret
+
+inputs:
+  - type: filestream
+    id: mra-logs
+    use_output: default
+    streams:
+      - id: mra-log-stream
+        data_stream:
+          dataset: mra
+          namespace: local
+        paths:
+          - /logs/*.log
+        parsers:
+          - ndjson:
+              target: ""
+              add_error_key: true
+
+agent:
+  monitoring:
+    enabled: false
+
+logging:
+  level: info
+  to_stderr: true

@@ -12,10 +12,10 @@
  */
 package ee.geckosolutions.mra.common.domain;
 
-public interface DomainEvent<ID> {
+public enum DomainEventType {
 
-    ID id();
-
-    DomainEventType type();
+    CREATE,
+    UPDATE,
+    DELETE
 
 }
