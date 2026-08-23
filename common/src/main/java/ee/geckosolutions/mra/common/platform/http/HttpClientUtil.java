@@ -12,6 +12,8 @@
  */
 package ee.geckosolutions.mra.common.platform.http;
 
+import java.util.function.Consumer;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.springframework.web.client.RestClient;
@@ -21,13 +23,13 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpClientUtil {
 
-    public static RestClient.Builder customize(RestClient.Builder builder, HttpServiceProperties httpServiceProperties) {
-        return builder.baseUrl(httpServiceProperties.getBaseUrl());
+    public static Consumer<RestClient.Builder> configure(HttpServiceProperties httpServiceProperties) {
+        return builder -> builder.baseUrl(httpServiceProperties.getBaseUrl());
     }
 
-    public static <T> T create(RestClient.Builder builder, Class<T> httpServiceType) {
+    public static <T> T create(RestClient.Builder restClientBuilder, Class<T> httpServiceType) {
         HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
-                .builderFor(RestClientAdapter.create(builder.build()))
+                .builderFor(RestClientAdapter.create(restClientBuilder.build()))
                 .build();
         return httpServiceProxyFactory.createClient(httpServiceType);
     }

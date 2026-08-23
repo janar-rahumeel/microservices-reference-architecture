@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.AbstractCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.AbstractNewCustomerV2;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchPageV2Response;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewPersonCustomerV2;
 import ee.geckosolutions.mra.common.platform.observation.Adapter;
@@ -30,13 +31,17 @@ import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
 import ee.geckosolutions.mra.common.platform.observation.AdapterType;
 import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2Api;
-import ee.geckosolutions.mra.core.context.customer.application.CustomerApplicationService;
+import ee.geckosolutions.mra.core.context.customer.adapter.in.web.dto.CustomerSearchFilterV2Request;
+import ee.geckosolutions.mra.core.context.customer.application.CustomerService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,16 +53,22 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class CustomerV2Controller {
 
-    private final CustomerApplicationService customerApplicationService;
+    private final CustomerService customerService;
     private final CustomerV2WebMapper customerV2WebMapper;
 
-    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<AbstractCustomerV2> get(@PathVariable UUID id) {
-        AbstractCustomerV2 customerV2 = customerV2WebMapper.toCustomerV2(customerApplicationService.getById(id));
-        return ResponseEntity.ok(customerV2);
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CustomerSearchPageV2Response> search(
+            @ModelAttribute CustomerSearchFilterV2Request customerSearchFilterV2Request,
+            Pageable pageable) {
+        Page<Customer> page = customerService.searchCustomers(
+                customerSearchFilterV2Request.getPartialName(),
+                customerSearchFilterV2Request.getPartialCode(),
+                pageable);
+        CustomerSearchPageV2Response response = customerV2WebMapper.toCustomerSearchPageV2(page);
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AbstractCustomerV2> insert(@Valid @RequestBody AbstractNewCustomerV2 newCustomerV2) {
         Customer customer = insertCustomer(newCustomerV2);
         AbstractCustomerV2 customerV2 = customerV2WebMapper.toCustomerV2(customer);
@@ -66,15 +77,21 @@ public class CustomerV2Controller {
 
     private Customer insertCustomer(AbstractNewCustomerV2 newCustomerV2) {
         if (newCustomerV2 instanceof NewPersonCustomerV2 newPersonCustomerV2) {
-            return customerApplicationService.createPersonCustomer(
+            return customerService.createPersonCustomer(
                     newPersonCustomerV2.getFirstName(),
                     newPersonCustomerV2.getLastName(),
                     newPersonCustomerV2.getPersonalIdentificationCode());
         }
 
         NewLegalEntityCustomerV2 newLegalEntityCustomerV2 = (NewLegalEntityCustomerV2) newCustomerV2;
-        return customerApplicationService
+        return customerService
                 .createLegalEntityCustomer(newLegalEntityCustomerV2.getName(), newLegalEntityCustomerV2.getRegistrationCode());
+    }
+
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AbstractCustomerV2> get(@PathVariable UUID id) {
+        AbstractCustomerV2 customerV2 = customerV2WebMapper.toCustomerV2(customerService.getById(id));
+        return ResponseEntity.ok(customerV2);
     }
 
 }

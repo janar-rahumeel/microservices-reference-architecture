@@ -27,7 +27,7 @@ import ee.geckosolutions.mra.common.platform.observation.Adapter;
 import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
 import ee.geckosolutions.mra.common.platform.observation.AdapterType;
 import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
-import ee.geckosolutions.mra.core.context.customer.application.CustomerApplicationService;
+import ee.geckosolutions.mra.core.context.customer.application.CustomerService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 
 import lombok.RequiredArgsConstructor;
@@ -47,24 +47,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class CustomerV1Controller {
 
-    private final CustomerApplicationService customerApplicationService;
+    private final CustomerService customerService;
     private final CustomerV1WebMapper customerV1WebMapper;
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CustomerV1> get(@PathVariable UUID id) {
-        CustomerV1 customerV1 = customerV1WebMapper.toCustomerV1(customerApplicationService.getById(id));
+        CustomerV1 customerV1 = customerV1WebMapper.toCustomerV1(customerService.getById(id));
         return ResponseEntity.ok(customerV1);
     }
 
     @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CustomerV1> insert(@Valid @RequestBody NewCustomerV1 newCustomerV1) {
         Customer customer = switch (newCustomerV1.getType()) {
-        case PRIVATE -> customerApplicationService.createPersonCustomer(
+        case PRIVATE -> customerService.createPersonCustomer(
                 newCustomerV1.getFirstName(),
                 newCustomerV1.getLastName(),
                 newCustomerV1.getPersonalIdentificationCode());
-        case COMPANY ->
-            customerApplicationService.createLegalEntityCustomer(newCustomerV1.getName(), newCustomerV1.getRegistrationCode());
+        case COMPANY -> customerService.createLegalEntityCustomer(newCustomerV1.getName(), newCustomerV1.getRegistrationCode());
         };
         CustomerV1 customerV1 = customerV1WebMapper.toCustomerV1(customer);
         return ResponseEntity.ok(customerV1);

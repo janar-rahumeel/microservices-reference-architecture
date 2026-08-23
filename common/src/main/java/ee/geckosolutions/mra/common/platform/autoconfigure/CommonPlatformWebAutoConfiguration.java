@@ -17,6 +17,9 @@ import java.util.function.Predicate;
 import ee.geckosolutions.mra.common.platform.web.DefaultExceptionHandler;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
 
+import io.micrometer.context.ContextRegistry;
+import io.micrometer.context.ContextSnapshot;
+import io.micrometer.context.ContextSnapshotFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -26,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.zalando.logbook.HttpRequest;
 import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
 import org.zalando.logbook.core.Conditions;
+import org.zalando.logbook.servlet.AsyncOnCompleteListenerWrapper;
 
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -50,6 +54,23 @@ public class CommonPlatformWebAutoConfiguration {
         @Bean
         Predicate<HttpRequest> requestCondition() {
             return Conditions.requestTo("**/api/v*/**");
+        }
+
+        @Bean
+        ContextSnapshotFactory contextSnapshotFactory() {
+            return ContextSnapshotFactory.builder().contextRegistry(ContextRegistry.getInstance()).build();
+        }
+
+        @Bean
+        AsyncOnCompleteListenerWrapper asyncOnCompleteListenerWrapper(ContextSnapshotFactory contextSnapshotFactory) {
+            return asyncOnCompleteListener -> {
+                ContextSnapshot contextSnapshot = contextSnapshotFactory.captureAll();
+                return asyncEvent -> {
+                    try (ContextSnapshot.Scope ignored = contextSnapshot.setThreadLocals()) {
+                        asyncOnCompleteListener.onComplete(asyncEvent);
+                    }
+                };
+            };
         }
 
     }

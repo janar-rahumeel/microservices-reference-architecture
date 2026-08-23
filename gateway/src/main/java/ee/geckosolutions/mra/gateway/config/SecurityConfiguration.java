@@ -38,13 +38,18 @@ import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Slf4j
 @Configuration
@@ -63,9 +68,14 @@ public class SecurityConfiguration {
     SecurityFilterChain securityFilterChainOAuth2(HttpSecurity httpSecurity) {
         return httpSecurity.securityMatcher("/**")
                 .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .requestCache(RequestCacheConfigurer::disable)
                 .authorizeHttpRequests(
-                        registry -> registry.requestMatchers(
-                                EndpointRequest.to(HealthEndpoint.class, PrometheusScrapeEndpoint.class, InfoEndpoint.class))
+                        registry -> registry.requestMatchers(HttpMethod.OPTIONS, "/**")
+                                .permitAll()
+                                .requestMatchers(
+                                        EndpointRequest
+                                                .to(HealthEndpoint.class, PrometheusScrapeEndpoint.class, InfoEndpoint.class))
                                 .permitAll()
                                 .requestMatchers(PERMITTED_REQUEST_URI_PATTERNS.toArray(String[]::new))
                                 .permitAll()
@@ -101,6 +111,23 @@ public class SecurityConfiguration {
             log.warn(e.getMessage());
             return null;
         }
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @RequiredArgsConstructor
+    static class WebConfiguration implements WebMvcConfigurer {
+
+        private final ApplicationProperties applicationProperties;
+
+        @Override
+        public void addCorsMappings(CorsRegistry corsRegistry) {
+            corsRegistry.addMapping("/api/**")
+                    .allowedOrigins(applicationProperties.getSecurity().getCors().getAllowedOrigins().toArray(String[]::new))
+                    .allowedMethods("*")
+                    .allowedHeaders("*")
+                    .allowCredentials(true);
+        }
+
     }
 
 }

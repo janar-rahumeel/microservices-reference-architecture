@@ -1,0 +1,13 @@
+// Snack bars render in the CDK overlay, outside every component's style scope,
+// so the `panelClass` styles used by NotificationService must live in global styles.
+.success-snackbar {
+  --mdc-snackbar-container-color: var(--mat-sys-tertiary-container);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-tertiary-container);
+  --mat-snack-bar-button-color: var(--mat-sys-on-tertiary-container);
+}
+
+.error-snackbar {
+  --mdc-snackbar-container-color: var(--mat-sys-error-container);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-error-container);
+  --mat-snack-bar-button-color: var(--mat-sys-on-error-container);
+}

@@ -1,0 +1,18 @@
+<div class="container">
+    <mat-card>
+        <mat-card-header>
+            <mat-card-title>Token Information</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+            <p>
+                <strong>Authenticated:</strong>
+                {{ isLoggedIn }}
+            </p>
+            @if (isLoggedIn) {
+            <mat-divider></mat-divider>
+            <h3>Access Token (decoded)</h3>
+            <pre>{{ token | json }}</pre>
+            }
+        </mat-card-content>
+    </mat-card>
+</div>

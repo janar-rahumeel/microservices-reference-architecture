@@ -31,11 +31,13 @@ import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCu
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.CUSTOMER)
 @RequestMapping("/api/v2/customers")
@@ -46,15 +48,21 @@ public class CustomerV2Controller implements CustomerV2Api {
     private final InternalCustomerV2Client internalCustomerV2Client;
 
     @Override
-    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Callable<ResponseEntity<byte[]>> get(@PathVariable UUID id) {
-        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.get(id));
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Callable<ResponseEntity<byte[]>> search(@RequestParam MultiValueMap<String, String> parameters) {
+        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.search(parameters));
     }
 
     @Override
-    @PostMapping(value = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public Callable<ResponseEntity<byte[]>> insert(@RequestBody byte[] content) {
         return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.insert(content));
+    }
+
+    @Override
+    @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Callable<ResponseEntity<byte[]>> get(@PathVariable UUID id) {
+        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.get(id));
     }
 
 }

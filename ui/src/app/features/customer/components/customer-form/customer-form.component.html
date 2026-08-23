@@ -1,0 +1,39 @@
+<form [formGroup]="entityForm()">
+    <mat-form-field [style.width.%]="50" style="display: flex">
+        <mat-label>Type</mat-label>
+        <mat-select #typeMatSelect formControlName="type" [value]="selectedType()">
+            @for (type of types(); track type) {
+            <mat-option [value]="type">{{ type }}</mat-option>
+            }
+        </mat-select>
+        <mat-error mraFormControlName="type"/>
+    </mat-form-field>
+    @if (isPersonFieldsVisible()) {
+    <mat-form-field [style.width.%]="100">
+        <mat-label>First Name</mat-label>
+        <input matInput formControlName="firstName"/>
+        <mat-error mraFormControlName="firstName"/>
+    </mat-form-field>
+    <mat-form-field [style.width.%]="100">
+        <mat-label>Last Name</mat-label>
+        <input matInput formControlName="lastName"/>
+        <mat-error mraFormControlName="lastName"/>
+    </mat-form-field>
+    <mat-form-field [style.width.%]="100">
+        <mat-label>Personal Identification Code</mat-label>
+        <input matInput formControlName="personalIdentificationCode"/>
+        <mat-error mraFormControlName="personalIdentificationCode"/>
+    </mat-form-field>
+    } @else {
+    <mat-form-field [style.width.%]="100">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name"/>
+        <mat-error mraFormControlName="name"/>
+    </mat-form-field>
+    <mat-form-field [style.width.%]="100">
+        <mat-label>Registration Code</mat-label>
+        <input matInput formControlName="registrationCode"/>
+        <mat-error mraFormControlName="registrationCode"/>
+    </mat-form-field>
+    }
+</form>

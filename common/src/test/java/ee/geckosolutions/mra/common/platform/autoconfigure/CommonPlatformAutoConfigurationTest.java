@@ -29,8 +29,6 @@ import org.zalando.logbook.Strategy;
 import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
 import org.zalando.logbook.core.BodyOnlyIfStatusAtLeastStrategy;
 import org.zalando.logbook.core.WithoutBodyStrategy;
-import org.zalando.logbook.servlet.AsyncCompletionDecorator;
-import org.zalando.logbook.servlet.MicrometerAsyncCompletionDecorator;
 
 class CommonPlatformAutoConfigurationTest {
 
@@ -136,82 +134,6 @@ class CommonPlatformAutoConfigurationTest {
 
             // then
             assertThat(context).hasSingleBean(Strategy.class).doesNotHaveBean("commonStrategy");
-        });
-    }
-
-    @Test
-    void shouldCreateAsyncCompletionDecoratorByDefault() {
-        // given
-        ApplicationContextRunner applicationContextRunner = contextRunner
-                .withConfiguration(AutoConfigurations.of(LogbookAutoConfiguration.class))
-                .withClassLoader(
-                        new FilteredClassLoader(
-                                "org.springframework.boot.restclient",
-                                "org.springframework.amqp.support.converter"));
-
-        // when
-        applicationContextRunner.run(context -> {
-
-            // then
-            assertThat(context).hasSingleBean(AsyncCompletionDecorator.class)
-                    .getBean(AsyncCompletionDecorator.class)
-                    .isInstanceOf(MicrometerAsyncCompletionDecorator.class);
-        });
-    }
-
-    @Test
-    void shouldCreateLogbookFilterByDefault() {
-        // given
-        ApplicationContextRunner applicationContextRunner = contextRunner
-                .withConfiguration(AutoConfigurations.of(LogbookAutoConfiguration.class))
-                .withClassLoader(
-                        new FilteredClassLoader(
-                                "org.springframework.boot.restclient",
-                                "org.springframework.amqp.support.converter"));
-
-        // when
-        applicationContextRunner.run(context -> {
-
-            // then
-            assertThat(context).hasBean("logbookFilter");
-        });
-    }
-
-    @Test
-    void shouldNotCreateLogbookFilterBeansWhenLogbookFilterIsDisabled() {
-        // given
-        ApplicationContextRunner applicationContextRunner = contextRunner
-                .withClassLoader(
-                        new FilteredClassLoader(
-                                "org.springframework.boot.restclient",
-                                "org.springframework.amqp.support.converter",
-                                "tools.jackson.databind.json"))
-                .withPropertyValues("logbook.filter.enabled=false");
-
-        // when
-        applicationContextRunner.run(context -> {
-
-            // then
-            assertThat(context).doesNotHaveBean("logbookFilter").doesNotHaveBean(AsyncCompletionDecorator.class);
-        });
-    }
-
-    @Test
-    void shouldBackOffWhenLogbookFilterBeanExists() {
-        // given
-        ApplicationContextRunner applicationContextRunner = contextRunner
-                .withClassLoader(
-                        new FilteredClassLoader(
-                                "org.springframework.boot.restclient",
-                                "org.springframework.amqp.support.converter",
-                                "tools.jackson.databind.json"))
-                .withBean("logbookFilter", String.class);
-
-        // when
-        applicationContextRunner.run(context -> {
-
-            // then
-            assertThat(context).hasBean("logbookFilter").getBean("logbookFilter").isInstanceOf(String.class);
         });
     }
 

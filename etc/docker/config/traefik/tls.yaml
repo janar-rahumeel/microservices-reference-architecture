@@ -1,0 +1,4 @@
+tls:
+  certificates:
+    - certFile: /certs/mra.crt
+      keyFile: /certs/mra.key

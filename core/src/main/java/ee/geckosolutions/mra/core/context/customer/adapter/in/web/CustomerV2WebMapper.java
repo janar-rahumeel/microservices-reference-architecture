@@ -18,6 +18,8 @@
 package ee.geckosolutions.mra.core.context.customer.adapter.in.web;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.AbstractCustomerV2;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchElementV2Response;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchPageV2Response;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
@@ -26,25 +28,51 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
+import org.springframework.data.domain.Page;
 
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, builder = @Builder(disableBuilder = true))
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, builder = @Builder)
 public abstract class CustomerV2WebMapper {
 
-    public AbstractCustomerV2 toCustomerV2(Customer customer) {
+    @Mapping(target = "elements", source = "content")
+    public abstract CustomerSearchPageV2Response toCustomerSearchPageV2(Page<Customer> page);
+
+    protected CustomerSearchElementV2Response toCustomerSearchElementV2(Customer customer) {
         if (customer instanceof PersonCustomer personCustomer) {
-            return map(personCustomer);
+            return toCustomerSearchElementV2(personCustomer);
         }
 
         if (customer instanceof LegalEntityCustomer legalEntityCustomer) {
-            return map(legalEntityCustomer);
+            return toCustomerSearchElementV2(legalEntityCustomer);
         }
 
         throw new IllegalArgumentException("Unsupported customer type: " + customer.getClass().getName());
     }
 
-    protected abstract PersonCustomerV2 map(PersonCustomer personCustomer);
+    @Mapping(target = "type", constant = "PERSON")
+    @Mapping(target = "name", expression = "java(customer.getFirstName() + \" \" + customer.getLastName())")
+    @Mapping(target = "code", source = "personalIdentificationCode")
+    protected abstract CustomerSearchElementV2Response toCustomerSearchElementV2(PersonCustomer customer);
 
-    protected abstract LegalEntityCustomerV2 map(LegalEntityCustomer legalEntityCustomer);
+    @Mapping(target = "type", constant = "LEGAL_ENTITY")
+    @Mapping(target = "code", source = "registrationCode")
+    protected abstract CustomerSearchElementV2Response toCustomerSearchElementV2(LegalEntityCustomer customer);
+
+    public AbstractCustomerV2 toCustomerV2(Customer customer) {
+        if (customer instanceof PersonCustomer personCustomer) {
+            return toCustomerV2(personCustomer);
+        }
+
+        if (customer instanceof LegalEntityCustomer legalEntityCustomer) {
+            return toCustomerV2(legalEntityCustomer);
+        }
+
+        throw new IllegalArgumentException("Unsupported customer type: " + customer.getClass().getName());
+    }
+
+    protected abstract PersonCustomerV2 toCustomerV2(PersonCustomer customer);
+
+    protected abstract LegalEntityCustomerV2 toCustomerV2(LegalEntityCustomer customer);
 
 }

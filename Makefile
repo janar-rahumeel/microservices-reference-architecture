@@ -35,8 +35,20 @@ deploy-kibana:
 deploy-elastic-agent:
 	docker compose -f ./etc/docker/docker-compose.yaml up elastic-agent -d
 
+deploy-traefik:
+	docker compose -f ./etc/docker/docker-compose.yaml up traefik -d
+
+deploy-traefik-experimental:
+	docker compose -f ./etc/docker/docker-compose.yaml up traefik-experimental -d
+
+deploy-redis-experimental:
+	docker compose -f ./etc/docker/docker-compose.yaml up redis-experimental -d
+
 start-ui:
 	$(MAKE) -C ui start
+
+start-token-experimental:
+	mvnw -pl token -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=local" spring-boot:run
 
 start-gateway:
 	mvnw -pl gateway -Dspring-boot.run.jvmArguments="-Dspring.profiles.active=local" spring-boot:run

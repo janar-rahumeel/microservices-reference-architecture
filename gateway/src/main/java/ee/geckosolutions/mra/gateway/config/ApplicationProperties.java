@@ -20,6 +20,7 @@ package ee.geckosolutions.mra.gateway.config;
 import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -65,16 +66,25 @@ public class ApplicationProperties {
 
     }
 
+    public record DeprecatedEndpoint(String pathTemplate, Set<HttpMethod> methods, ZonedDateTime deprecationDate,
+            @Nullable ZonedDateTime sunsetDate, @Nullable String successorLink) {
+    }
+
     @Getter
     @Setter
     public static class Security {
 
+        private final Cors cors = new Cors();
         private String realmName;
 
-    }
+        @Getter
+        @Setter
+        public static class Cors {
 
-    public record DeprecatedEndpoint(String pathTemplate, Set<HttpMethod> methods, ZonedDateTime deprecationDate,
-            @Nullable ZonedDateTime sunsetDate, @Nullable String successorLink) {
+            private Set<String> allowedOrigins = new HashSet<>();
+
+        }
+
     }
 
 }

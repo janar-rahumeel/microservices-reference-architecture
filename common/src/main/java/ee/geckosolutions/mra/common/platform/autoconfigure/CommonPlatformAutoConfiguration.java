@@ -12,16 +12,12 @@
  */
 package ee.geckosolutions.mra.common.platform.autoconfigure;
 
-import static jakarta.servlet.DispatcherType.ASYNC;
-import static jakarta.servlet.DispatcherType.REQUEST;
-
 import java.util.Map;
 
 import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
 import ee.geckosolutions.mra.common.platform.observation.CommonObservationAspect;
 import ee.geckosolutions.mra.common.platform.observation.EcsLoggingDomainEventListener;
 
-import io.micrometer.context.ContextSnapshotFactory;
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.support.converter.DefaultJacksonJavaTypeMapper;
@@ -33,20 +29,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.restclient.RestClientCustomizer;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.zalando.logbook.Logbook;
 import org.zalando.logbook.Strategy;
 import org.zalando.logbook.StructuredHttpLogFormatter;
 import org.zalando.logbook.autoconfigure.LogbookProperties;
 import org.zalando.logbook.core.BodyOnlyIfStatusAtLeastStrategy;
-import org.zalando.logbook.ecs.EcsSink;
 import org.zalando.logbook.ecs.EcsStructuredHttpLogFormatter;
-import org.zalando.logbook.servlet.AsyncCompletionDecorator;
-import org.zalando.logbook.servlet.CustomLogbookFilter;
-import org.zalando.logbook.servlet.MicrometerAsyncCompletionDecorator;
+import org.zalando.logbook.ecs.HttpStatusCodeBasedEcsSink;
 import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -76,8 +66,8 @@ public class CommonPlatformAutoConfiguration {
         }
 
         @Bean
-        EcsSink ecsSink(StructuredHttpLogFormatter structuredHttpLogFormatter) {
-            return new EcsSink(structuredHttpLogFormatter);
+        HttpStatusCodeBasedEcsSink httpStatusCodeBasedEcsSink(StructuredHttpLogFormatter structuredHttpLogFormatter) {
+            return new HttpStatusCodeBasedEcsSink(structuredHttpLogFormatter);
         }
 
         @Bean
@@ -85,39 +75,6 @@ public class CommonPlatformAutoConfiguration {
         @ConditionalOnMissingBean(Strategy.class)
         Strategy commonStrategy(@Value("${logbook.minimum-status:400}") int status) {
             return new BodyOnlyIfStatusAtLeastStrategy(status);
-        }
-
-        /**
-         * @see <a href="https://github.com/zalando/logbook/issues/2283">Logbook issue</a>
-         */
-        @Bean
-        @ConditionalOnProperty(name = "logbook.filter.enabled", havingValue = "true", matchIfMissing = true)
-        @ConditionalOnMissingBean(AsyncCompletionDecorator.class)
-        AsyncCompletionDecorator micrometerAsyncCompletionDecorator() {
-            return new MicrometerAsyncCompletionDecorator(ContextSnapshotFactory.builder().build());
-        }
-
-        /**
-         * @see <a href="https://github.com/zalando/logbook/issues/2283">Logbook issue</a>
-         */
-        @Bean
-        @ConditionalOnProperty(name = "logbook.filter.enabled", havingValue = "true", matchIfMissing = true)
-        @ConditionalOnMissingBean(name = "logbookFilter")
-        FilterRegistrationBean<?> logbookFilter(
-                Logbook logbook,
-                LogbookProperties logbookProperties,
-                AsyncCompletionDecorator asyncCompletionDecorator) {
-            CustomLogbookFilter customLogbookFilter = new CustomLogbookFilter(
-                    logbook,
-                    null,
-                    logbookProperties.getFilter().getFormRequestMode(),
-                    asyncCompletionDecorator);
-            FilterRegistrationBean<CustomLogbookFilter> filterRegistrationBean = new FilterRegistrationBean<>(
-                    customLogbookFilter);
-            filterRegistrationBean.setName("logbookFilter");
-            filterRegistrationBean.setDispatcherTypes(REQUEST, ASYNC);
-            filterRegistrationBean.setOrder(Ordered.LOWEST_PRECEDENCE);
-            return filterRegistrationBean;
         }
 
     }

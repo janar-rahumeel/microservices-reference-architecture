@@ -28,7 +28,7 @@ import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCrea
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
-import ee.geckosolutions.mra.core.context.customer.application.CustomerApplicationService;
+import ee.geckosolutions.mra.core.context.customer.application.CustomerService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCustomer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
@@ -52,7 +52,7 @@ import org.springframework.http.ResponseEntity;
 class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
     @Autowired
-    private CustomerApplicationService customerApplicationService;
+    private CustomerService customerService;
 
     @Autowired
     private RabbitAdmin rabbitAdmin;
@@ -63,8 +63,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
     @Test
     void testThatGetCustomerV1IsSuccessful() {
         // given
-        PersonCustomer personCustomer = (PersonCustomer) customerApplicationService
-                .createPersonCustomer("Chuck", "Norris", "38109239859");
+        PersonCustomer personCustomer = (PersonCustomer) customerService.createPersonCustomer("Chuck", "Norris", "38109239859");
 
         // when
         ResponseEntity<CustomerV1> responseEntity = testRestTemplate.exchange(
@@ -123,7 +122,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         assertThat(customerV1.getLastName()).isNull();
         assertThat(customerV1.getPersonalIdentificationCode()).isNull();
 
-        Customer customer = customerApplicationService.getById(customerV1.getId());
+        Customer customer = customerService.getById(customerV1.getId());
         assertThat(customer).isInstanceOf(LegalEntityCustomer.class);
 
         Message message = await()
@@ -146,7 +145,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .name("Duplicate Ltd")
                 .registrationCode("14447332")
                 .build();
-        customerApplicationService.createLegalEntityCustomer(newCustomerV1.getName(), newCustomerV1.getRegistrationCode());
+        customerService.createLegalEntityCustomer(newCustomerV1.getName(), newCustomerV1.getRegistrationCode());
 
         // when
         ResponseEntity<ProblemDetail> responseEntity = testRestTemplate.exchange(

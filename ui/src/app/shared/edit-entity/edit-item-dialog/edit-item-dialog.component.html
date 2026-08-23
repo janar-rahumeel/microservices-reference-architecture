@@ -1,0 +1,13 @@
+<h1 mat-dialog-title>{{ title() }}</h1>
+<div mat-dialog-content>
+  @if (generalErrorMessage()) {
+    <mat-error>
+      {{ generalErrorMessage() }}
+    </mat-error>
+  }
+  <ng-template #content />
+</div>
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+  <button mat-button mat-raised-button class="mat-primary" (click)="onSaveClicked()">Save</button>
+</div>
