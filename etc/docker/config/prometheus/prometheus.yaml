@@ -9,15 +9,19 @@ scrape_configs:
       module: [ http_2xx ]
     static_configs:
       - targets:
-          - http://host.docker.internal:8243/internal/actuator/health
+          - http://host.docker.internal:9000/internal/actuator/health
+        labels:
+          service_name: token
+      - targets:
+          - http://host.docker.internal:9001/internal/actuator/health
         labels:
           service_name: gateway
       - targets:
-          - http://host.docker.internal:8244/internal/actuator/health
+          - http://host.docker.internal:9002/internal/actuator/health
         labels:
           service_name: core
       - targets:
-          - http://host.docker.internal:8245/internal/actuator/health
+          - http://host.docker.internal:9003/internal/actuator/health
         labels:
           service_name: worker
     relabel_configs:
@@ -27,18 +31,23 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox:9115
+  - job_name: "token"
+    metrics_path: "/internal/actuator/prometheus"
+    static_configs:
+      - targets:
+          - "host.docker.internal:9000"
   - job_name: "gateway"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:8243"
+          - "host.docker.internal:9001"
   - job_name: "core"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:8244"
+          - "host.docker.internal:9002"
   - job_name: "worker"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:8245"
+          - "host.docker.internal:9003"

@@ -1,0 +1,63 @@
+http:
+  routers:
+    keycloak-token:
+      rule: >
+        Host(`kc.mra.local`) &&
+        Path(`/realms/mra/protocol/openid-connect/token`)
+      entryPoints:
+        - websecure
+      middlewares:
+        - token-path
+      service: token
+      tls: {}
+      priority: 100
+    keycloak:
+      rule: "Host(`kc.mra.local`)"
+      entryPoints:
+        - websecure
+      service: keycloak
+      tls: {}
+    gateway:
+      rule: "Host(`api.mra.local`)"
+      entryPoints:
+        - websecure
+      middlewares:
+        - access-token-relay
+      service: gateway
+      tls: {}
+    ui:
+      rule: "Host(`ui.mra.local`)"
+      entryPoints:
+        - websecure
+      service: ui
+      tls: {}
+
+  middlewares:
+    token-path:
+      replacePath:
+        path: /internal/api/v1/openid-connect/token
+    access-token-relay:
+      forwardAuth:
+        address: "http://host.docker.internal:8000/internal/api/v1/openid-connect/session-token"
+        authRequestHeaders:
+          - Cookie
+        authResponseHeaders:
+          - Authorization
+
+  services:
+    keycloak:
+      loadBalancer:
+        servers:
+          - url: "http://keycloak:8080"
+    token:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8000"
+    gateway:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8001"
+    ui:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:4200"

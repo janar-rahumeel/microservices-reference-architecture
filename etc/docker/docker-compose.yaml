@@ -1,5 +1,43 @@
 services:
 
+  traefik:
+    image: traefik:v3.7.11
+    ports:
+      - "8443:443"
+    volumes:
+      - ./config/traefik:/etc/traefik/dynamic:ro
+      - ../../etc/certificate:/certs:ro
+    command:
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--log.level=DEBUG"
+      - "--accesslog=true"
+
+  traefik-experimental:
+    image: traefik:v3.7.11
+    ports:
+      - "8443:443"
+    volumes:
+      - ./config/traefik-experimental:/etc/traefik/dynamic:ro
+      - ../../etc/certificate:/certs:ro
+    command:
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls=true"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
+      - "--log.level=DEBUG"
+      - "--accesslog=true"
+
+  redis-experimental:
+    image: redis:8.10.1-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes
+
   keycloak-db:
     image: postgres:18.4-alpine
     environment:
@@ -14,7 +52,7 @@ services:
     depends_on:
       - keycloak-db
     ports:
-      - "9443:8443"
+      - "127.0.0.1:8100:8080"
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
@@ -23,14 +61,10 @@ services:
       KC_DB_PASSWORD: keycloak
       KC_BOOTSTRAP_ADMIN_USERNAME: mra
       KC_BOOTSTRAP_ADMIN_PASSWORD: mra123
-      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/tls.key
-      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/tls.crt
-      KC_HOSTNAME: kc.mra.local
-    volumes:
-      - ../../etc/certificate/mra.crt:/opt/keycloak/certs/tls.crt
-      - ../../etc/certificate/mra.key:/opt/keycloak/certs/tls.key
+      KC_HOSTNAME: https://kc.mra.local:8443
+      KC_PROXY_HEADERS: xforwarded
     command:
-      - start
+      - start-dev
 
   rabbitmq:
     image: rabbitmq:4.3-management-alpine

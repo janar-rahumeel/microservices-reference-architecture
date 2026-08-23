@@ -1,0 +1,6 @@
+<h1 mat-dialog-title>{{ this.context.title }}</h1>
+<div mat-dialog-content>{{ this.context.message }}</div>
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close>Close</button>
+  <button mat-button mat-raised-button class="mat-primary" (click)="onActionButtonClicked()">{{ this.context.actionButtonLabel }}</button>
+</div>

@@ -26,8 +26,10 @@ import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
@@ -35,6 +37,9 @@ import org.springframework.web.service.annotation.PostExchange;
 @Adapter(direction = AdapterDirection.OUT, type = AdapterType.REST_CLIENT, boundedContext = BoundedContext.CUSTOMER)
 @HttpExchange(url = "/internal/api/v2/customers")
 public interface InternalCustomerV2Client {
+
+    @GetExchange(accept = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<byte[]> search(@RequestParam MultiValueMap<String, String> parameters);
 
     @GetExchange(url = "/{id}", accept = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<byte[]> get(@PathVariable UUID id);

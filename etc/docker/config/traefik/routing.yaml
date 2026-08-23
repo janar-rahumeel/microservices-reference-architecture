@@ -1,0 +1,34 @@
+http:
+  routers:
+    keycloak:
+      rule: "Host(`kc.mra.local`)"
+      entryPoints:
+        - websecure
+      service: keycloak
+      tls: {}
+    gateway:
+      rule: "Host(`api.mra.local`)"
+      entryPoints:
+        - websecure
+      service: gateway
+      tls: {}
+    ui:
+      rule: "Host(`ui.mra.local`)"
+      entryPoints:
+        - websecure
+      service: ui
+      tls: {}
+
+  services:
+    keycloak:
+      loadBalancer:
+        servers:
+          - url: "http://keycloak:8080"
+    gateway:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8001"
+    ui:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:4200"

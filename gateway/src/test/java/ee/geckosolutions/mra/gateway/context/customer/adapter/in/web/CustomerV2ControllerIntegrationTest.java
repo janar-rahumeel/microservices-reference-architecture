@@ -31,6 +31,9 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchElementV2Response;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchPageV2Response;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
@@ -47,6 +50,99 @@ import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
 
 class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
+
+    @Test
+    void testThatSearchCustomersV2IsSuccessful() {
+        // given
+        String firstCustomerId = UUID.randomUUID().toString();
+        String firstCustomerName = "Chuck Norris";
+        String firstCustomerCode = "38204837746";
+
+        String secondCustomerId = UUID.randomUUID().toString();
+        String secondCustomerName = "Bruce Wayne";
+        String secondCustomerCode = "38204837747";
+
+        URI uri = URI.create("http://core.test/internal/api/v2/customers?page=0&size=2");
+        coreServiceMockRestServiceServer.expect(requestTo(uri))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+                .andRespond(
+                        withSuccess(
+                                """
+                                        {
+                                          "elements": [
+                                            {
+                                              "id": "%s",
+                                              "type": "PERSON",
+                                              "name": "%s",
+                                              "code": "%s"
+                                            },
+                                            {
+                                              "id": "%s",
+                                              "type": "PERSON",
+                                              "name": "%s",
+                                              "code": "%s"
+                                            }
+                                          ],
+                                          "number": 0,
+                                          "size": 2,
+                                          "numberOfElements": 2,
+                                          "totalElements": 5,
+                                          "totalPages": 3,
+                                          "first": true,
+                                          "last": false,
+                                          "empty": false
+                                        }
+                                        """.formatted(
+                                        firstCustomerId,
+                                        firstCustomerName,
+                                        firstCustomerCode,
+                                        secondCustomerId,
+                                        secondCustomerName,
+                                        secondCustomerCode),
+                                MediaType.APPLICATION_JSON));
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setBearerAuth(TestUtil.getToken());
+        httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+        HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
+
+        // when
+        ResponseEntity<CustomerSearchPageV2Response> responseEntity = testRestTemplate
+                .exchange("/api/v2/customers?page=0&size=2", HttpMethod.GET, httpEntity, CustomerSearchPageV2Response.class);
+
+        // then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(responseEntity.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+
+        CustomerSearchPageV2Response response = responseEntity.getBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.getElements()).hasSize(2);
+
+        CustomerSearchElementV2Response firstCustomer = response.getElements().get(0);
+        assertThat(firstCustomer.getId()).isEqualTo(UUID.fromString(firstCustomerId));
+        assertThat(firstCustomer.getType()).isEqualTo(CustomerTypeV2.PERSON);
+        assertThat(firstCustomer.getName()).isEqualTo(firstCustomerName);
+        assertThat(firstCustomer.getCode()).isEqualTo(firstCustomerCode);
+
+        CustomerSearchElementV2Response secondCustomer = response.getElements().get(1);
+        assertThat(secondCustomer.getId()).isEqualTo(UUID.fromString(secondCustomerId));
+        assertThat(secondCustomer.getType()).isEqualTo(CustomerTypeV2.PERSON);
+        assertThat(secondCustomer.getName()).isEqualTo(secondCustomerName);
+        assertThat(secondCustomer.getCode()).isEqualTo(secondCustomerCode);
+
+        assertThat(response.getNumber()).isZero();
+        assertThat(response.getSize()).isEqualTo(2);
+        assertThat(response.getNumberOfElements()).isEqualTo(2);
+        assertThat(response.getTotalElements()).isEqualTo(5);
+        assertThat(response.getTotalPages()).isEqualTo(3);
+        assertThat(response.isFirst()).isTrue();
+        assertThat(response.isLast()).isFalse();
+        assertThat(response.isEmpty()).isFalse();
+
+        coreServiceMockRestServiceServer.verify();
+    }
 
     @Test
     void testThatGetCustomerV2IsSuccessful() {

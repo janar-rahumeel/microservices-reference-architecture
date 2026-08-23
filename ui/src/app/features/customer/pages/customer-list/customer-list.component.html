@@ -1,0 +1,46 @@
+<mat-toolbar color="primary">
+  <mat-toolbar-row>
+    <input matInput placeholder="Search by Name" #partialNameMatInput />
+    &nbsp;
+    <input matInput placeholder="Search by Code" #partialCodeMatInput />
+    <button mat-icon-button matTooltip="Search" type="button" (click)="onSearchButtonClicked()">
+      <mat-icon>search</mat-icon>
+    </button>
+    <span style="flex: 1 1 auto"></span>
+    <button mat-icon-button matTooltip="Add" (click)="onCreateButtonClicked()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
+<table mat-table [dataSource]="listDataSource" matSort matSortActive="name" matSortDirection="asc" matSortDisableClear="true">
+  <ng-container matColumnDef="id">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let customerListElement">{{ customerListElement.id }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="type">
+    <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
+    <mat-cell *matCellDef="let customerListElement">{{ customerListElement.type }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+    <mat-cell *matCellDef="let customerListElement">{{ customerListElement.name }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="code">
+    <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+    <mat-cell *matCellDef="let customerListElement">{{ customerListElement.code }}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+    <mat-cell *matCellDef="let customerListElement">
+      <mat-toolbar-row>
+        <button mat-icon-button matTooltip="Delete" class="mat-primary" (click)="onDeleteButtonClicked(customerListElement)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-toolbar-row>
+    </mat-cell>
+  </ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns" />
+  <mat-row *matRowDef="let customerListElement; columns: displayedColumns" />
+  <div *matNoDataRow>No data found</div>
+</table>
+<mat-paginator pageIndex="0" pageSize="20" [pageSizeOptions]="[20, 40, 60]" />

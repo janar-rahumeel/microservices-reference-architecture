@@ -22,8 +22,9 @@ import java.util.UUID;
 import ee.geckosolutions.mra.core.context.customer.adapter.out.persistence.entity.CustomerEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface CustomerJpaRepository extends JpaRepository<CustomerEntity, UUID> {
+public interface CustomerJpaRepository extends JpaRepository<CustomerEntity, UUID>, JpaSpecificationExecutor<CustomerEntity> {
 
     boolean existsByPersonalIdentificationCode(String personalIdentificationCode);
 

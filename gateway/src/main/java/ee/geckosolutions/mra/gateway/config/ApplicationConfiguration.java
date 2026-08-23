@@ -21,6 +21,7 @@ import java.time.Clock;
 
 import ee.geckosolutions.mra.common.platform.http.HttpClientUtil;
 import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
+import ee.geckosolutions.mra.gateway.adapter.in.web.DummyApiVersionResolver;
 import ee.geckosolutions.mra.gateway.adapter.in.web.EndpointDeprecationHandler;
 
 import io.swagger.v3.oas.models.Operation;
@@ -36,6 +37,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 
 @Slf4j
 @Configuration
@@ -75,12 +77,16 @@ public class ApplicationConfiguration {
     }
 
     @Bean(CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME)
-    RestClient.Builder coreServiceRestClientBuilder(RestClientBuilderConfigurer restClientBuilderConfigurer) {
+    RestClient.Builder coreServiceRestClientBuilder(
+            RestClientBuilderConfigurer restClientBuilderConfigurer,
+            LogbookClientHttpRequestInterceptor logbookClientHttpRequestInterceptor) {
         HttpServiceProperties httpServiceProperties = applicationProperties.getInternalServices().getCoreService();
-        RestClient.Builder builder = HttpClientUtil.customize(RestClient.builder(), httpServiceProperties);
+        RestClient.Builder builder = restClientBuilderConfigurer.configure(RestClient.builder())
+                .requestInterceptor(logbookClientHttpRequestInterceptor)
+                .apply(HttpClientUtil.configure(httpServiceProperties));
         builder.defaultStatusHandler(HttpStatusCode::isError, (ignoredHttpRequest, ignoredClientHttpResponse) -> {
         });
-        return restClientBuilderConfigurer.configure(builder);
+        return builder;
     }
 
     @Bean
@@ -96,7 +102,9 @@ public class ApplicationConfiguration {
 
         @Override
         public void configureApiVersioning(ApiVersionConfigurer configurer) {
-            configurer.setDeprecationHandler(deprecationHandler).setSupportedVersionPredicate(ignored -> true);
+            configurer.setDeprecationHandler(deprecationHandler)
+                    .useVersionResolver(new DummyApiVersionResolver())
+                    .setSupportedVersionPredicate(ignored -> true);
         }
 
     }

@@ -27,6 +27,7 @@
 
     <modules>
         <module>common</module>
+        <module>token</module>
         <module>gateway</module>
         <module>core</module>
         <module>worker</module>
@@ -48,7 +49,7 @@
             <dependency>
                 <groupId>org.zalando</groupId>
                 <artifactId>logbook-spring-boot-starter</artifactId>
-                <version>4.1.0</version>
+                <version>4.2.0</version>
             </dependency>
             <dependency>
                 <groupId>net.ttddyy.observation</groupId>
@@ -59,6 +60,11 @@
                 <groupId>net.ttddyy.observation</groupId>
                 <artifactId>datasource-micrometer-opentelemetry</artifactId>
                 <version>2.2.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>1.6.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

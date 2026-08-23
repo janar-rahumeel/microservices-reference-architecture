@@ -15,6 +15,23 @@ service configuration
 
 [Local TLS Setup](etc/local-tls-setup.md) - Step CA setup, local
 certificate authority, and HTTPS configuration for all services
+/
+### 🌐 Ingress & Routing
+
+Traefik provides the HTTP entry point for the MRA infrastructure and routes requests to internal services based on the requested host and path
+
+Start Traefik:
+
+```bash
+make deploy-traefik
+```
+
+The configured local domains include:
+
+* `https://ui.mra.local:8443` → Angular UI
+* `https://api.mra.local:8443` → API Gateway
+* `https://kc.mra.local:8443` → Keycloak
+
 
 ### 🔑 Identity & Authentication
 
@@ -25,7 +42,7 @@ make deploy-keycloak-db
 make deploy-keycloak
 ```
 
-URL: https://kc.mra.local:9443 (credentials mra:mra123)
+URL: https://kc.mra.local:8443 (credentials mra:mra123)
 
 See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC configuration
 
@@ -97,7 +114,7 @@ Elastic Agent collects Spring Boot ECS-structured application logs and forwards 
 make start-ui
 ```
 
-URL: https://ui.mra.local:4200
+URL: https://ui.mra.local:8443
 
 #### API Gateway
 
@@ -124,6 +141,25 @@ make start-worker
 ```
 
 No public URL
+
+#### Token Microservice (experimental)
+
+This service explores a backend-mediated OAuth2/OIDC approach where valid access and refresh tokens are kept out of the browser. The token microservice manages the tokens server-side and exposes only a secure session to the SPA
+
+The existing SPA OAuth2 Authorization Code Flow remains fully supported and works as before. This allows both approaches to be evaluated side by side without changing the existing SPA authentication flow
+
+``` bash
+make start-token-experimental
+```
+
+No public URL
+
+Dependencies:
+
+``` bash
+make deploy-treafik-experimental
+make deploy-redis-experimental
+```
 
 ## Architecture
 

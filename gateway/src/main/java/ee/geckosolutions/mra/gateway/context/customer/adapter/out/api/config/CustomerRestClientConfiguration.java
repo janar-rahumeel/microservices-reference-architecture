@@ -22,26 +22,24 @@ import ee.geckosolutions.mra.gateway.config.ApplicationConfiguration;
 import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCustomerV1Client;
 import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCustomerV2Client;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@RequiredArgsConstructor
 public class CustomerRestClientConfiguration {
 
     @Bean
     InternalCustomerV1Client internalCustomerV1Client(
-            @Qualifier(ApplicationConfiguration.CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME) RestClient.Builder builder) {
-        return HttpClientUtil.create(builder, InternalCustomerV1Client.class);
+            @Qualifier(ApplicationConfiguration.CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME) RestClient.Builder restClientBuilder) {
+        return HttpClientUtil.create(restClientBuilder, InternalCustomerV1Client.class);
     }
 
     @Bean
     InternalCustomerV2Client internalCustomerV2Client(
-            @Qualifier(ApplicationConfiguration.CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME) RestClient.Builder builder) {
-        return HttpClientUtil.create(builder, InternalCustomerV2Client.class);
+            @Qualifier(ApplicationConfiguration.CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME) RestClient.Builder restClientBuilder) {
+        return HttpClientUtil.create(restClientBuilder, InternalCustomerV2Client.class);
     }
 
 }

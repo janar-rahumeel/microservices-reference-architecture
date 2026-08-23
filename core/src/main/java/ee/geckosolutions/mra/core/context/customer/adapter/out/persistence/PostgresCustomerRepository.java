@@ -17,8 +17,14 @@
  */
 package ee.geckosolutions.mra.core.context.customer.adapter.out.persistence;
 
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.StreamSupport;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
 
 import ee.geckosolutions.mra.common.platform.observation.Adapter;
 import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
@@ -33,6 +39,13 @@ import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCusto
 import ee.geckosolutions.mra.core.context.customer.domain.model.PersonCustomer;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 @Adapter(direction = AdapterDirection.OUT, type = AdapterType.JPA, boundedContext = BoundedContext.CUSTOMER)
@@ -41,6 +54,78 @@ import org.springframework.stereotype.Repository;
 public class PostgresCustomerRepository implements CustomerRepository {
 
     private final CustomerJpaRepository customerJpaRepository;
+
+    @Override
+    public Page<Customer> findBy(@Nullable String partialName, @Nullable Long partialCode, Pageable pageable) {
+        Specification<CustomerEntity> specification = Specification
+                .allOf(hasNamePattern(partialName), hasCodePattern(partialCode), hasSort(pageable.getSort()));
+        return customerJpaRepository.findAll(specification, PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()))
+                .map(PostgresCustomerRepository::toDomain);
+    }
+
+    private Specification<CustomerEntity> hasNamePattern(String partialName) {
+        if (StringUtils.isBlank(partialName)) {
+            return Specification.unrestricted();
+        }
+
+        String pattern = "%" + partialName.toLowerCase(Locale.ROOT) + "%";
+        return (root, query, builder) -> builder.or(
+                builder.like(builder.lower(root.get("firstName")), pattern),
+                builder.like(builder.lower(root.get("lastName")), pattern),
+                builder.like(builder.lower(root.get("name")), pattern));
+    }
+
+    private Specification<CustomerEntity> hasCodePattern(Long partialCode) {
+        if (partialCode == null) {
+            return Specification.unrestricted();
+        }
+
+        String pattern = "%" + partialCode + "%";
+        return (root, query, builder) -> builder.or(
+                builder.like(root.get("personalIdentificationCode"), pattern),
+                builder.like(root.get("registrationCode"), pattern));
+    }
+
+    private static Specification<CustomerEntity> hasSort(Sort sort) {
+        if (sort.isUnsorted()) {
+            return Specification.unrestricted();
+        }
+
+        return (root, query, builder) -> {
+            query.orderBy(StreamSupport.stream(sort.spliterator(), false).map(sortOrder -> {
+                Expression<String> expression = switch (sortOrder.getProperty()) {
+                case "name" -> customerName(root, builder);
+                case "code" -> customerCode(root, builder);
+                default -> throw new IllegalArgumentException("Unsupported customer sort property: " + sortOrder.getProperty());
+                };
+
+                if (sortOrder.isAscending()) {
+                    return builder.asc(expression);
+                }
+
+                return builder.desc(expression);
+            }).toList());
+            return null;
+        };
+    }
+
+    private static Expression<String> customerName(Root<CustomerEntity> root, CriteriaBuilder builder) {
+        return builder.<String> selectCase()
+                .when(
+                        builder.equal(root.get("type"), CustomerType.PERSON),
+                        builder.concat(
+                                builder.concat(builder.coalesce(root.get("firstName"), ""), " "),
+                                builder.coalesce(root.get("lastName"), "")))
+                .otherwise(builder.coalesce(root.get("name"), ""));
+    }
+
+    private static Expression<String> customerCode(Root<CustomerEntity> root, CriteriaBuilder builder) {
+        return builder.<String> selectCase()
+                .when(
+                        builder.equal(root.get("type"), CustomerType.PERSON),
+                        builder.coalesce(root.get("personalIdentificationCode"), ""))
+                .otherwise(builder.coalesce(root.get("registrationCode"), ""));
+    }
 
     @Override
     public Optional<Customer> findById(UUID id) {

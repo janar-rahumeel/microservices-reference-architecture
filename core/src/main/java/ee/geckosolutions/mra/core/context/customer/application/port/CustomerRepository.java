@@ -22,7 +22,12 @@ import java.util.UUID;
 
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 public interface CustomerRepository {
+
+    Page<Customer> findBy(String partialName, Long partialCode, Pageable pageable);
 
     Optional<Customer> findById(UUID id);
 

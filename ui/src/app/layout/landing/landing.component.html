@@ -1,0 +1,33 @@
+<mat-toolbar color="primary">
+    <span>Microservices Reference Architecture</span>
+    <span class="spacer"></span>
+    @if (isLoggedIn) {
+    <span class="user-info">
+        <mat-icon>account_circle</mat-icon>
+    <span class="user-name">{{ userName }}</span>
+</span>
+    <button mat-icon-button (click)="logout()" aria-label="Logout" matTooltip="Logout">
+        <mat-icon color="warn">logout</mat-icon>
+    </button>
+    } @else {
+    <button mat-icon-button (click)="login()" aria-label="Login" matTooltip="Login">
+        <mat-icon color="primary">login</mat-icon>
+    </button>
+    }
+</mat-toolbar>
+<nav mat-tab-nav-bar [tabPanel]="tabPanel">
+    @for (tab of tabs; track tab) {
+    <a
+            mat-tab-link
+            [routerLinkActiveOptions]="{ exact: true }"
+            routerLinkActive
+            #rla="routerLinkActive"
+            [routerLink]="[tab.url]"
+            [active]="rla.isActive"
+    >{{ tab.title }}
+    </a>
+    }
+</nav>
+<mat-tab-nav-panel #tabPanel>
+    <router-outlet></router-outlet>
+</mat-tab-nav-panel>
