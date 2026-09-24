@@ -131,7 +131,8 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
 
     private static Map<String, Object> datasourceObservationDefaultProperties() {
         // https://jdbc-observations.github.io/datasource-micrometer/docs/current/docs/html/#using-features-hikaricp-support
-        return Map.of("jdbc.hikari.enabled", false);
+        // https://jdbc-observations.github.io/datasource-micrometer/docs/current/docs/html/#spans-and-metrics
+        return Map.of("jdbc.hikari.enabled", false, "jdbc.opentelemetry.metrics.enabled", false);
     }
 
     private static Map<String, Object> rabbitMqDefaultProperties() {
