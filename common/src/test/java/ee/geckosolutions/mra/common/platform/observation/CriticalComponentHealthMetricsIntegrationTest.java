@@ -27,7 +27,7 @@ import org.springframework.test.context.DynamicPropertySource;
                 "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
                 "spring.datasource.hikari.connection-timeout=1000",
                 "management.endpoint.health.group.critical.include=db",
-                "application.common.critical-component-health-metrics.refresh-interval=1s" })
+                "application.platform.critical-component-health-metrics.refresh-interval=1s" })
 class CriticalComponentHealthMetricsIntegrationTest {
 
     @Nullable

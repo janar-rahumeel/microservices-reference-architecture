@@ -20,14 +20,8 @@ deploy-tempo:
 deploy-grafana:
 	docker compose -f ./etc/docker/docker-compose.yaml up grafana -d
 
-deploy-elasticsearch-setup:
-	docker compose -f ./etc/docker/docker-compose.yaml up elasticsearch-setup -d
-
 deploy-elasticsearch:
 	docker compose -f ./etc/docker/docker-compose.yaml up elasticsearch -d
-
-deploy-kibana-setup:
-	docker compose -f ./etc/docker/docker-compose.yaml up kibana-setup -d
 
 deploy-kibana:
 	docker compose -f ./etc/docker/docker-compose.yaml up kibana -d
@@ -61,3 +55,6 @@ start-worker:
 
 start-c4:
 	docker compose -f ./etc/docker/docker-compose.yaml up likec4 -d
+
+reset:
+	docker compose -f ./etc/docker/docker-compose.yaml down -v

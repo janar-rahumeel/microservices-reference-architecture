@@ -1,7 +1,7 @@
 services:
 
   traefik:
-    image: traefik:v3.7.11
+    image: traefik:v3.7.13
     ports:
       - "8443:443"
     volumes:
@@ -12,11 +12,13 @@ services:
       - "--entrypoints.websecure.http.tls=true"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
+      - "--log.format=json"
       - "--accesslog=true"
+      - "--accesslog.format=json"
 
   traefik-experimental:
-    image: traefik:v3.7.11
+    image: traefik:v3.7.13
     ports:
       - "8443:443"
     volumes:
@@ -28,7 +30,9 @@ services:
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--providers.file.watch=true"
       - "--log.level=DEBUG"
+      - "--log.format=json"
       - "--accesslog=true"
+      - "--accesslog.format=json"
 
   redis-experimental:
     image: redis:8.10.1-alpine
@@ -45,7 +49,7 @@ services:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: keycloak
     volumes:
-      - ./data/postgresql/keycloak:/var/lib/postgresql
+      - postgres-keycloak-data:/var/lib/postgresql
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.6
@@ -74,7 +78,7 @@ services:
     volumes:
       - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
-      - ./data/rabbitmq:/var/lib/rabbitmq
+      - rabbitmq-data:/var/lib/rabbitmq
 
   blackbox:
     image: prom/blackbox-exporter:v0.27.0
@@ -99,7 +103,7 @@ services:
       - "4317:4317"
     volumes:
       - ./config/grafana/tempo.yaml:/etc/config.yaml:ro
-      - ./data/tempo:/tmp/tempo
+      - tempo-data:/tmp/tempo
     command:
       - "-config.file=/etc/config.yaml"
 
@@ -115,7 +119,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: mra123
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
-      - ./data/grafana:/var/lib/grafana
+      - grafana-data:/var/lib/grafana
 
   elasticsearch:
     image: elastic/elasticsearch:9.5.0
@@ -123,10 +127,10 @@ services:
       ES_SETTING_DISCOVERY_TYPE: single-node
       ES_SETTING_XPACK_SECURITY_ENABLED: true
       ES_PORT: 0.0.0.0:9200
-      ES_JAVA_OPTS: -Xms1g -Xmx1g
+      ES_JAVA_OPTS: -Xms2g -Xmx2g
       ELASTIC_PASSWORD: elastic_secret
     volumes:
-      - ./data/elasticsearch:/usr/share/elasticsearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data
     healthcheck:
       test:
         [
@@ -137,6 +141,9 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+    mem_limit: 4g
+    networks:
+      - infra
 
   elasticsearch-setup:
     image: curlimages/curl:8.10.1
@@ -156,6 +163,8 @@ services:
       - ./config/elastic/elasticsearch-index-template.json:/config/index-template.json:ro
     entrypoint: [ "/bin/sh", "/config/setup.sh" ]
     restart: "no"
+    networks:
+      - infra
 
   kibana:
     image: elastic/kibana:9.5.0
@@ -168,6 +177,7 @@ services:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
       ELASTICSEARCH_USERNAME: kibana_system
       ELASTICSEARCH_PASSWORD: kibana_system_secret
+      XPACK_FLEET_ENABLED: true
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: 7F3A91C4E82D5B106AC9F731D8452E0B4D8C217FA69035BE1C7A92D4F08E6B53
       XPACK_REPORTING_ENCRYPTIONKEY: A81D4E729C063FB5E1428A97D6C30F51E7B2A4C89D10F6358F4E1C9A72B5D803
       XPACK_SECURITY_ENCRYPTIONKEY: 3C9F0A72E5B184D63A8F2C917D4E6B30D71E5A924C8F3B106AD6792E41F05C87
@@ -181,6 +191,8 @@ services:
       timeout: 5s
       retries: 30
       start_period: 30s
+    networks:
+      - infra
 
   kibana-setup:
     image: curlimages/curl:8.10.1
@@ -195,15 +207,78 @@ services:
       - ./config/elastic/kibana-saved-objects.ndjson:/config/saved-objects.ndjson:ro
     entrypoint: [ "/bin/sh", "/config/setup.sh" ]
     restart: "no"
+    networks:
+      - infra
+
+  elastic-fleet-setup:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      kibana-setup:
+        condition: service_completed_successfully
+    user: root
+    environment:
+      KIBANA_USERNAME: elastic
+      KIBANA_PASSWORD: elastic_secret
+      FLEET_SERVER_SERVICE_TOKEN_PATH: /config/secrets/fleet-server.token
+      MRA_AGENT_ENROLLMENT_TOKEN_PATH: /config/secrets/mra-agent-enrollment.token
+    volumes:
+      - ./config/elastic/fleet-setup.sh:/config/setup.sh:ro
+      - secrets:/config/secrets
+    entrypoint: [ "/bin/sh", "/config/setup.sh" ]
+    restart: "no"
+    networks:
+      - infra
+
+  elastic-fleet:
+    image: elastic/elastic-agent:9.5.0
+    depends_on:
+      elastic-fleet-setup:
+        condition: service_completed_successfully
+    ports:
+      - "8220:8220"
+    environment:
+      FLEET_SERVER_ENABLE: 1
+      FLEET_SERVER_POLICY_ID: fleet-server-policy
+      FLEET_SERVER_ELASTICSEARCH_HOST: http://elasticsearch:9200
+      FLEET_SERVER_SERVICE_TOKEN_PATH: /config/secrets/fleet-server.token
+      FLEET_SERVER_HOST: 0.0.0.0
+      FLEET_SERVER_PORT: 8220
+      FLEET_SERVER_CERT: "/certs/mra.crt"
+      FLEET_SERVER_CERT_KEY: "/certs/mra.key"
+      FLEET_CA: "/certs/root_ca.crt"
+      FLEET_URL: https://fleet.mra.local:8220
+    volumes:
+      - ../../etc/certificate:/certs:ro
+      - secrets:/config/secrets:ro
+    networks:
+      infra:
+        aliases:
+          - fleet.mra.local
 
   elastic-agent:
     image: elastic/elastic-agent:9.5.0
     depends_on:
-      kibana-setup:
-        condition: service_completed_successfully
+      elastic-fleet:
+        condition: service_started
+    environment:
+      FLEET_ENROLL: 1
+      FLEET_URL: https://fleet.mra.local:8220
+      FLEET_CA: "/certs/root_ca.crt"
     volumes:
-      - ./config/elastic/agent.yaml:/usr/share/elastic-agent/elastic-agent.yml:ro
       - ../../target/logs:/logs:ro
+      - ../../etc/certificate:/certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - secrets:/config/secrets:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        export FLEET_ENROLLMENT_TOKEN="$$(cat /config/secrets/mra-agent-enrollment.token)"
+        exec /usr/bin/tini -- /usr/local/bin/docker-entrypoint
+    networks:
+      - infra
 
   likec4:
     image: likec4/likec4:1.59
@@ -217,3 +292,13 @@ services:
     volumes:
       - ../c4:/data
     command: start
+
+volumes:
+  secrets:
+  elasticsearch-data:
+  postgres-keycloak-data:
+  rabbitmq-data:
+  tempo-data:
+  grafana-data:
+networks:
+  infra:
