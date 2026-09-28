@@ -9,47 +9,49 @@
   "packageRules": [
     {
       "groupName": "Angular",
+      "matchCategories": ["js"],
       "matchPackageNames": [
         "@angular/**"
       ]
     },
     {
-      "description": "Disable Spring Boot major and minor version updates",
-      "matchCategories": "java",
-      "matchUpdateTypes": [
-        "major",
-        "minor"
-      ],
-      "matchManagers": [
-        "maven"
-      ],
+      "groupName": "Angular ESLint",
+      "matchCategories": ["js"],
       "matchPackageNames": [
-        "org.springframework.boot:*"
+        "@angular-eslint/**",
+        "angular-eslint"
+      ]
+    },
+    {
+      "description": "Disable Spring Boot major and minor version updates",
+      "matchCategories": ["java"],
+      "matchUpdateTypes": ["major","minor"],
+      "matchPackageNames": [
+        "org.springframework.boot"
       ],
       "enabled": false
     },
     {
-      "description": "Disable major version updates",
-      "matchCategories": [
-        "docker",
-        "js"
-      ],
-      "matchUpdateTypes": [
-        "major"
-      ],
+      "description": "Disable Docker major version updates",
+      "matchCategories": ["docker"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {
-      "description": "Disable JavaScript minor version updates for given packages",
-      "matchCategories": "js",
-      "matchUpdateTypes": [
-        "minor"
-      ],
+      "description": "Restrict Angular compatibility matrix dependencies to patch updates",
+      "matchCategories": ["js"],
+      "matchUpdateTypes": ["major", "minor"],
       "matchPackageNames": [
         "@angular/**",
-        "rxjs",
-        "typescript"
+        "typescript",
+        "rxjs"
       ],
+      "enabled": false
+    },
+    {
+      "description": "Disable major version updates for JavaScript dependencies",
+      "matchCategories": ["js"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     }
   ]

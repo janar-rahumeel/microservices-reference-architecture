@@ -15,6 +15,7 @@ package ee.geckosolutions.mra.common.platform.autoconfigure;
 import java.util.Map;
 
 import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
+import ee.geckosolutions.mra.common.platform.config.PlatformProperties;
 import ee.geckosolutions.mra.common.platform.observation.CommonObservationAspect;
 import ee.geckosolutions.mra.common.platform.observation.EcsLoggingDomainEventListener;
 
@@ -28,6 +29,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,6 +44,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 @AutoConfiguration(beforeName = "org.zalando.logbook.ecs.autoconfigure.LogbookEcsAutoConfiguration")
+@EnableConfigurationProperties(PlatformProperties.class)
 public class CommonPlatformAutoConfiguration {
 
     @Bean

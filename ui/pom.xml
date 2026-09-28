@@ -18,9 +18,9 @@
 
     <properties>
         <!-- renovate: datasource=node-version depName=node -->
-        <node.version>24.18.0</node.version>
+        <node.version>24.21.0</node.version>
         <!-- renovate: datasource=npm depName=npm -->
-        <npm.version>11.18.0</npm.version>
+        <npm.version>11.21.0</npm.version>
         <plugin.spotless.skip>true</plugin.spotless.skip>
     </properties>
 

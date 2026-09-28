@@ -50,7 +50,7 @@ curl -fsS \
     -H "kbn-xsrf: true" \
     "${KIBANA_URL}/s/mra/api/data_views/default" \
     -d '{
-      "data_view_id": "mra-view",
+      "data_view_id": "mra-application-view",
       "force": true
     }'
 

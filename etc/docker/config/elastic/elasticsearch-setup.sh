@@ -25,7 +25,10 @@ curl -fsS \
       "cluster": [],
       "indices": [
         {
-          "names": ["logs-mra-*"],
+          "names": [
+            "logs-mra.application-*",
+            "logs-traefik.access-*"
+          ],
           "privileges": [
             "read",
             "view_index_metadata"

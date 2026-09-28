@@ -15,7 +15,7 @@ service configuration
 
 [Local TLS Setup](etc/local-tls-setup.md) - Step CA setup, local
 certificate authority, and HTTPS configuration for all services
-/
+
 ### 🌐 Ingress & Routing
 
 Traefik provides the HTTP entry point for the MRA infrastructure and routes requests to internal services based on the requested host and path
@@ -161,6 +161,18 @@ make deploy-treafik-experimental
 make deploy-redis-experimental
 ```
 
+### 🔄 Reset to Initial State
+
+To reset the local infrastructure and remove all Docker volumes created by this project:
+
+```bash
+make reset
+```
+
+This removes the containers and their associated named volumes, including persisted data for services such as PostgreSQL, Elasticsearch, RabbitMQ, etc.
+
+> ⚠️ **Warning:** This permanently deletes all data stored in the Compose volumes. Configuration files and other files mounted from the project directory are not affected
+
 ## Architecture
 
 The architecture is maintained as **Architecture as Code** using LikeC4
@@ -174,4 +186,3 @@ Viewer URL: http://localhost:5173
 The diagrams include product, operational platform, RabbitMQ, and runtime dependency views
 
 The LikeC4 model is defined in `/etc/c4/architecture.c4`
-

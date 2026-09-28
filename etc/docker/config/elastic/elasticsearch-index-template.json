@@ -1,6 +1,6 @@
 {
   "index_patterns": [
-    "logs-mra-*"
+    "logs-mra.application-*"
   ],
   "priority": 200,
   "data_stream": {},

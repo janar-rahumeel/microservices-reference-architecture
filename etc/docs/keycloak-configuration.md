@@ -56,8 +56,8 @@ curl -X POST "https://kc.mra.local:9443/realms/mra/protocol/openid-connect/token
   - `Require PKCE = ✔`
   - `PKCE Method = S256`
 
-- Valid redirect URIs = https://ui.mra.local:4200/auth/callback
-- Web origins = https://ui.mra.local:4200
+- Valid redirect URIs = https://ui.mra.local:8443/auth/callback
+- Web origins = https://ui.mra.local:8443
 - Go to **Users → Add user (e.g. `mra-demo`)**
   - `Required user actions = NONE`
   - `E-mail verified = OFF`
