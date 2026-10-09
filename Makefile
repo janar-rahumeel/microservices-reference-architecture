@@ -1,4 +1,3 @@
-
 deploy-keycloak-db:
 	docker compose -f ./etc/docker/docker-compose.yaml up keycloak-db -d
 
@@ -37,6 +36,9 @@ deploy-traefik-experimental:
 
 deploy-redis-experimental:
 	docker compose -f ./etc/docker/docker-compose.yaml up redis-experimental -d
+
+deploy-mra-db:
+	docker compose -f ./etc/docker/docker-compose.yaml up mra-db -d
 
 start-ui:
 	$(MAKE) -C ui start

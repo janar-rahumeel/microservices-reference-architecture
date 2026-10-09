@@ -1,13 +1,27 @@
+/*
+ * SPDX-License-Identifier: NONE
+ *
+ * Copyright (C) 2026-present Gecko Solutions OÜ
+ * All rights reserved.
+ *
+ * This software is the proprietary and confidential property of Gecko Solutions OÜ.
+ * Unauthorized copying, redistribution, or modification of this file, in whole or in part,
+ * is strictly prohibited without prior written consent from Gecko Solutions OÜ.
+ *
+ * For licensing information, contact: licensing@geckosolutions.ee
+ */
 package ee.geckosolutions.mra.common.platform.observation;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import ee.geckosolutions.mra.common.platform.config.PlatformProperties;
@@ -16,16 +30,17 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.health.actuate.endpoint.CompositeHealthDescriptor;
 import org.springframework.boot.health.actuate.endpoint.HealthDescriptor;
 import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
 import org.springframework.boot.health.contributor.Status;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler;
 
 @Slf4j
 @RequiredArgsConstructor
-public class CriticalComponentHealthMetrics implements SmartLifecycle {
+public class CriticalComponentHealthMetrics implements InitializingBean, DisposableBean {
 
     private static final String GROUP = "critical";
     private static final String METRIC_NAME = "application_critical_component_up";
@@ -33,14 +48,12 @@ public class CriticalComponentHealthMetrics implements SmartLifecycle {
     private final Map<String, AtomicBoolean> componentHealth = new ConcurrentHashMap<>();
     private final SimpleAsyncTaskScheduler taskScheduler = simpleAsyncTaskScheduler();
     private final ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
-    private final AtomicBoolean running = new AtomicBoolean();
-    private final AtomicBoolean refreshRunning = new AtomicBoolean();
 
     private final PlatformProperties platformProperties;
     private final HealthEndpoint healthEndpoint;
     private final MeterRegistry meterRegistry;
 
-    private Set<String> componentNames = Set.of();
+    private List<String> componentNames = List.of();
 
     private static SimpleAsyncTaskScheduler simpleAsyncTaskScheduler() {
         SimpleAsyncTaskScheduler scheduler = new SimpleAsyncTaskScheduler();
@@ -50,30 +63,24 @@ public class CriticalComponentHealthMetrics implements SmartLifecycle {
     }
 
     @Override
-    public boolean isRunning() {
-        return running.get();
-    }
-
-    @Override
-    public void start() {
+    public void afterPropertiesSet() {
         componentNames = Optional.ofNullable(healthEndpoint.healthForPath(GROUP))
                 .filter(CompositeHealthDescriptor.class::isInstance)
                 .map(CompositeHealthDescriptor.class::cast)
                 .map(CompositeHealthDescriptor::getComponents)
                 .map(Map::keySet)
-                .map(Set::copyOf)
-                .orElseGet(Set::of);
+                .map(List::copyOf)
+                .orElseGet(List::of);
 
         if (componentNames.isEmpty()) {
             return;
         }
 
         componentNames.forEach(this::registerComponent);
-        executorService.submit(() -> refreshComponentHealth());
+
         taskScheduler.scheduleWithFixedDelay(
                 this::refreshComponentHealth,
                 platformProperties.getCriticalComponentHealthMetrics().getRefreshInterval());
-        running.set(true);
     }
 
     private void registerComponent(String componentName) {
@@ -85,50 +92,52 @@ public class CriticalComponentHealthMetrics implements SmartLifecycle {
                 .register(meterRegistry);
     }
 
-    public void refreshComponentHealth() {
-        if (!refreshRunning.compareAndSet(false, true)) {
-            return;
-        }
-
+    private void refreshComponentHealth() {
         try {
-            List<? extends Future<?>> futures = componentNames.stream()
-                    .map(componentName -> executorService.submit(() -> refreshComponentHealth(componentName)))
-                    .toList();
-            futures.forEach(future -> {
-                try {
-                    future.get();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("Critical component health refresh interrupted", e);
-                } catch (Exception e) {
-                    log.warn("Critical component health refresh failed", e);
+            List<Future<Boolean>> componentHealthFutures = executorService.invokeAll(
+                    componentNames.stream()
+                            .<Callable<Boolean>> map(componentName -> () -> resolveComponentHealth(componentName))
+                            .toList(),
+                    platformProperties.getCriticalComponentHealthMetrics().getRefreshTimeout().toMillis(),
+                    TimeUnit.MILLISECONDS);
+
+            for (int i = 0; i < componentHealthFutures.size(); i++) {
+                String componentName = componentNames.get(i);
+                Future<Boolean> componentHealthFuture = componentHealthFutures.get(i);
+
+                if (componentHealthFuture.isCancelled()) {
+                    componentHealth.get(componentName).set(false);
+                    log.warn("Health check timed out for component {}", componentName);
+                    continue;
                 }
-            });
-        } finally {
-            refreshRunning.set(false);
+
+                try {
+                    componentHealth.get(componentName).set(componentHealthFuture.get());
+                } catch (ExecutionException e) {
+                    componentHealth.get(componentName).set(false);
+                    log.warn("Health check failed for component {}", componentName, e.getCause());
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.warn("Critical component health refresh interrupted", e);
         }
     }
 
-    private void refreshComponentHealth(String componentName) {
-        AtomicBoolean healthReference = componentHealth.get(componentName);
-
+    private boolean resolveComponentHealth(String componentName) {
         try {
             HealthDescriptor healthDescriptor = healthEndpoint.healthForPath(componentName);
-            healthReference.set(healthDescriptor != null && Status.UP.equals(healthDescriptor.getStatus()));
+            return healthDescriptor != null && Status.UP.equals(healthDescriptor.getStatus());
         } catch (Exception e) {
-            healthReference.set(false);
-            log.warn("Health check failed for component {}, setting its UP status to false", componentName, e);
+            log.warn("Health check failed for component {}", componentName, e);
+            return false;
         }
     }
 
     @Override
-    public void stop() {
-        if (!running.compareAndSet(true, false)) {
-            return;
-        }
-
+    public void destroy() {
         taskScheduler.close();
-        executorService.close();
+        executorService.shutdownNow();
     }
 
 }

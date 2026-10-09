@@ -14,5 +14,6 @@ package ee.geckosolutions.mra.common.platform.observation;
 
 public enum BoundedContext {
     NONE,
+    ACCESS,
     CUSTOMER
 }

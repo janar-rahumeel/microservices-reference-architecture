@@ -4,13 +4,13 @@
 --comment: Create customer table
 CREATE TABLE customer
 (
-    id UUID PRIMARY KEY,
-    type TEXT NOT NULL,
-    first_name TEXT,
-    last_name TEXT,
+    id                           UUID PRIMARY KEY DEFAULT uuidv7(),
+    type                         TEXT NOT NULL,
+    first_name                   TEXT,
+    last_name                    TEXT,
     personal_identification_code TEXT,
-    name TEXT,
-    registration_code TEXT
+    name                         TEXT,
+    registration_code            TEXT
 );
 
 ALTER TABLE customer

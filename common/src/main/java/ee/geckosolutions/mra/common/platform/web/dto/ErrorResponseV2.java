@@ -12,12 +12,20 @@
  */
 package ee.geckosolutions.mra.common.platform.web.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
 import ee.geckosolutions.mra.common.platform.web.jackson.ErrorCodeSerializer;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import tools.jackson.databind.annotation.JsonSerialize;
 
-public record ErrorResponseV2(UUID id, @JsonSerialize(using = ErrorCodeSerializer.class) ErrorCode errorCode, String message) {
+public record ErrorResponseV2(UUID id, @JsonSerialize(using = ErrorCodeSerializer.class) ErrorCode errorCode, String message,
+        @JsonInclude(JsonInclude.Include.NON_EMPTY) List<FieldErrorV2> fieldErrors) {
+
+    public ErrorResponseV2(UUID id, ErrorCode errorCode, String message) {
+        this(id, errorCode, message, List.of());
+    }
+
 }

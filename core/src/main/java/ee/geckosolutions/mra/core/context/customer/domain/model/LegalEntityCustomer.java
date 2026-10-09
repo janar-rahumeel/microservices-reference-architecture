@@ -19,6 +19,8 @@ package ee.geckosolutions.mra.core.context.customer.domain.model;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.domain.identifier.UuidV7;
+import ee.geckosolutions.mra.common.domain.validation.Invariants;
 import ee.geckosolutions.mra.core.context.customer.domain.event.CustomerCreatedEvent;
 
 import lombok.Getter;
@@ -31,12 +33,13 @@ public class LegalEntityCustomer extends Customer {
 
     public LegalEntityCustomer(UUID id, String name, String registrationCode) {
         super(id, CustomerType.LEGAL_ENTITY);
-        this.name = requireNonBlank(name, "name");
-        this.registrationCode = requireNonBlank(registrationCode, "registrationCode");
+        Invariants.check().notBlank("name", name).notBlank("registrationCode", registrationCode).throwIfViolated();
+        this.name = name;
+        this.registrationCode = registrationCode;
     }
 
     public static LegalEntityCustomer createNew(String name, String registrationCode) {
-        LegalEntityCustomer legalEntityCustomer = new LegalEntityCustomer(UUID.randomUUID(), name, registrationCode);
+        LegalEntityCustomer legalEntityCustomer = new LegalEntityCustomer(UuidV7.generate(), name, registrationCode);
         legalEntityCustomer.registerEvent(new CustomerCreatedEvent(legalEntityCustomer.getId()));
         return legalEntityCustomer;
     }

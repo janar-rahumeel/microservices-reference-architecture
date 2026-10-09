@@ -10,7 +10,7 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-package ee.geckosolutions.mra.common.platform.observation;
+package ee.geckosolutions.mra.common.platform.observation.ecs;
 
 import java.util.List;
 import java.util.Locale;

@@ -75,6 +75,12 @@
             <artifactId>testcontainers-redis</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ee.geckosolutions.microservices-reference-architecture</groupId>
+            <artifactId>microservices-reference-architecture-common-test</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

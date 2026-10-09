@@ -57,6 +57,7 @@ public final class TestUtil {
                 .audience(List.of("mra"))
                 .issuedAt(now)
                 .expiresAt(now.plus(Duration.ofHours(1)))
+                .claim("preferred_username", "test")
                 .claim("scope", "email profile")
                 .build();
         return JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), jwtClaimsSet);

@@ -10,7 +10,7 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-package ee.geckosolutions.mra.common.platform.observation;
+package ee.geckosolutions.mra.common.platform.observation.ecs;
 
 import java.util.Map;
 import java.util.function.Function;
@@ -88,6 +88,12 @@ public class EcsStructuredLogFormatter extends JsonWriterStructuredLogFormatter<
                 if (spanId != null) {
                     consumer.accept("span.id", spanId);
                 }
+
+                mdcPropertyMap.forEach((key, value) -> {
+                    if (key.startsWith("ecs:") && value != null) {
+                        consumer.accept(key.substring("ecs:".length()), value);
+                    }
+                });
             });
             pairs.add(ILoggingEvent::getKeyValuePairs, PAIR_EXTRACTOR);
         }));

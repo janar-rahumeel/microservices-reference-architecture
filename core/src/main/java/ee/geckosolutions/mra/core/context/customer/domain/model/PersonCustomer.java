@@ -19,6 +19,8 @@ package ee.geckosolutions.mra.core.context.customer.domain.model;
 
 import java.util.UUID;
 
+import ee.geckosolutions.mra.common.domain.identifier.UuidV7;
+import ee.geckosolutions.mra.common.domain.validation.Invariants;
 import ee.geckosolutions.mra.core.context.customer.domain.event.CustomerCreatedEvent;
 
 import lombok.Getter;
@@ -26,19 +28,27 @@ import lombok.Getter;
 @Getter
 public class PersonCustomer extends Customer {
 
+    public static final int PERSONAL_IDENTIFICATION_CODE_LENGTH = 11;
+
     private final String firstName;
     private final String lastName;
     private final String personalIdentificationCode;
 
     public PersonCustomer(UUID id, String firstName, String lastName, String personalIdentificationCode) {
         super(id, CustomerType.PERSON);
-        this.firstName = requireNonBlank(firstName, "firstName");
-        this.lastName = requireNonBlank(lastName, "lastName");
-        this.personalIdentificationCode = requireNonBlank(personalIdentificationCode, "personalIdentificationCode");
+        Invariants.check()
+                .notBlank("firstName", firstName)
+                .notBlank("lastName", lastName)
+                .notBlank("personalIdentificationCode", personalIdentificationCode)
+                .exactDigits("personalIdentificationCode", personalIdentificationCode, PERSONAL_IDENTIFICATION_CODE_LENGTH)
+                .throwIfViolated();
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.personalIdentificationCode = personalIdentificationCode;
     }
 
     public static PersonCustomer createNew(String firstName, String lastName, String personalIdentificationCode) {
-        PersonCustomer personCustomer = new PersonCustomer(UUID.randomUUID(), firstName, lastName, personalIdentificationCode);
+        PersonCustomer personCustomer = new PersonCustomer(UuidV7.generate(), firstName, lastName, personalIdentificationCode);
         personCustomer.registerEvent(new CustomerCreatedEvent(personCustomer.getId()));
         return personCustomer;
     }

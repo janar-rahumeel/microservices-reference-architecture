@@ -26,15 +26,20 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
+import ee.geckosolutions.mra.gateway.security.config.SecurityConfiguration;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
 import ee.geckosolutions.mra.gateway.test.TestUtil;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -45,6 +50,16 @@ import tools.jackson.databind.JsonNode;
 
 class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
+    @Autowired
+    private CacheManager cacheManager;
+
+    @BeforeEach
+    void beforeEach() {
+        Objects.requireNonNull(
+                cacheManager.getCache(SecurityConfiguration.USER_DETAILS_CACHE_NAME),
+                "User details cache must exist").clear();
+    }
+
     @Test
     void testThatGetCustomerV1IsSuccessful() {
         // given
@@ -53,8 +68,8 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String lastName = "Norris";
         String personalIdentificationCode = "38208274481";
 
-        URI uri = URI.create("http://core.test/internal/api/v1/customers/" + customerId);
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer
+                .expect(requestTo(URI.create("http://core.test/internal/api/v1/customers/" + customerId)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(
@@ -63,6 +78,8 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                         + "\",\"lastName\":\"" + lastName + "\",\"personalIdentificationCode\":\""
                                         + personalIdentificationCode + "\"}",
                                 MediaType.APPLICATION_JSON));
+
+        mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(TestUtil.getToken());
@@ -102,8 +119,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String name = "Chuck Norris Ltd.";
         String registrationCode = "US656734";
 
-        URI uri = URI.create("http://core.test/internal/api/v1/customers");
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer.expect(requestTo(URI.create("http://core.test/internal/api/v1/customers")))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
@@ -112,6 +128,8 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 "{\"id\":\"" + customerId + "\",\"type\":\"COMPANY\",\"name\":\"" + name
                                         + "\",\"registrationCode\":\"" + registrationCode + "\"}",
                                 MediaType.APPLICATION_JSON));
+
+        mockAuthenticatedUser();
 
         NewCustomerV1 newCustomerV1 = NewCustomerV1.builder()
                 .type(CustomerTypeV1.COMPANY)
@@ -155,13 +173,15 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 {"id":"%s","errorCode":"general.technical.entity-not-found","message":"%s"}
                 """.formatted(errorId, errorMessage);
 
-        URI uri = URI.create("http://core.test/internal/api/v1/customers/" + customerId);
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer
+                .expect(requestTo(URI.create("http://core.test/internal/api/v1/customers/" + customerId)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(
                         withStatus(HttpStatus.NOT_FOUND).contentType(MediaType.APPLICATION_PROBLEM_JSON)
                                 .body(errorResponseJson));
+
+        mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(TestUtil.getToken());

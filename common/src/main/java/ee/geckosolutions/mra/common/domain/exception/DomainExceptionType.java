@@ -14,7 +14,7 @@ package ee.geckosolutions.mra.common.domain.exception;
 
 public enum DomainExceptionType {
 
-    FIELD_VALIDATION,
+    INVARIANT_VIOLATION,
     DUPLICATE_ENTITY
 
 }
