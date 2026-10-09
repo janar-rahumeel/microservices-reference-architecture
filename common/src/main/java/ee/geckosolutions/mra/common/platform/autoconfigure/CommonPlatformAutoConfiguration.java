@@ -17,7 +17,7 @@ import java.util.Map;
 import ee.geckosolutions.mra.common.contract.customer.messaging.dto.CustomerCreatedEventV1;
 import ee.geckosolutions.mra.common.platform.config.PlatformProperties;
 import ee.geckosolutions.mra.common.platform.observation.CommonObservationAspect;
-import ee.geckosolutions.mra.common.platform.observation.EcsLoggingDomainEventListener;
+import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingDomainEventListener;
 
 import io.micrometer.observation.ObservationRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +33,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskDecorator;
+import org.springframework.security.concurrent.DelegatingSecurityContextRunnable;
 import org.zalando.logbook.Strategy;
 import org.zalando.logbook.StructuredHttpLogFormatter;
 import org.zalando.logbook.autoconfigure.LogbookProperties;
@@ -105,6 +107,17 @@ public class CommonPlatformAutoConfiguration {
             defaultJacksonJavaTypeMapper.setIdClassMapping(Map.of("CUSTOMER_CREATED_EVENT_V1", CustomerCreatedEventV1.class));
             jacksonJsonMessageConverter.setJavaTypeMapper(defaultJacksonJavaTypeMapper);
             return jacksonJsonMessageConverter;
+        }
+
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(DelegatingSecurityContextRunnable.class)
+    static class SecurityConfiguration {
+
+        @Bean
+        TaskDecorator securityContextTaskDecorator() {
+            return DelegatingSecurityContextRunnable::new;
         }
 
     }

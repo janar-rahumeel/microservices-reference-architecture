@@ -12,14 +12,17 @@
  */
 package ee.geckosolutions.mra.common.platform.web;
 
+import java.util.List;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.domain.exception.AbstractDomainException;
 import ee.geckosolutions.mra.common.domain.exception.DomainExceptionType;
+import ee.geckosolutions.mra.common.domain.validation.InvariantViolationException;
 import ee.geckosolutions.mra.common.platform.exception.AbstractApplicationException;
 import ee.geckosolutions.mra.common.platform.exception.ApplicationExceptionType;
 import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
 import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
+import ee.geckosolutions.mra.common.platform.web.dto.FieldErrorV2;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -64,6 +67,27 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         };
     }
 
+    @ExceptionHandler(InvariantViolationException.class)
+    public @Nullable ResponseEntity<Object> handleInvariantViolationException(
+            InvariantViolationException invariantViolationException,
+            WebRequest webRequest) {
+        List<FieldErrorV2> fieldErrors = invariantViolationException.getViolations()
+                .stream()
+                .map(violation -> new FieldErrorV2(violation.field(), violation::code, violation.parameters()))
+                .toList();
+        ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
+                UUID.randomUUID(),
+                invariantViolationException::getErrorCode,
+                invariantViolationException.getMessage(),
+                fieldErrors);
+        return handleExceptionInternal(
+                invariantViolationException,
+                errorResponseV2Body,
+                HttpHeaders.EMPTY,
+                map(invariantViolationException.getType()),
+                webRequest);
+    }
+
     @ExceptionHandler(AbstractDomainException.class)
     public @Nullable ResponseEntity<Object> handleDomainException(
             AbstractDomainException domainException,
@@ -78,7 +102,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
 
     private static HttpStatus map(DomainExceptionType domainExceptionType) {
         return switch (domainExceptionType) {
-        case FIELD_VALIDATION -> HttpStatus.BAD_REQUEST;
+        case INVARIANT_VIOLATION -> HttpStatus.UNPROCESSABLE_CONTENT;
         case DUPLICATE_ENTITY -> HttpStatus.CONFLICT;
         };
     }

@@ -26,6 +26,7 @@
     </properties>
 
     <modules>
+        <module>common-test</module>
         <module>common</module>
         <module>token</module>
         <module>gateway</module>

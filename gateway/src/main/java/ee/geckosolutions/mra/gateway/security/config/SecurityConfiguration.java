@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.mra.gateway.config;
+package ee.geckosolutions.mra.gateway.security.config;
 
 import java.time.Duration;
 import java.util.Set;
 
 import ee.geckosolutions.mra.gateway.adapter.in.web.SecurityExceptionHandler;
+import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
+import ee.geckosolutions.mra.gateway.security.ApplicationJwtPrincipalConverter;
 
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,7 @@ import org.springframework.boot.security.oauth2.server.resource.autoconfigure.Jw
 import org.springframework.boot.ssl.NoSuchSslBundleException;
 import org.springframework.boot.ssl.SslBundle;
 import org.springframework.boot.ssl.SslBundles;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -46,6 +49,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.RequestCacheConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -53,16 +57,26 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Slf4j
 @Configuration
+@EnableCaching
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfiguration {
+
+    public static final String USER_DETAILS_CACHE_NAME = "userDetails";
 
     private static final Set<String> PERMITTED_REQUEST_URI_PATTERNS = Set
             .of("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml", "/v3/api-docs");
     private static final Set<String> STATIC_RESOURCE_REQUEST_URI_PATTERNS = Set.of("/favicon.ico");
 
     private final SecurityExceptionHandler securityExceptionHandler;
+
+    @Bean
+    JwtAuthenticationConverter jwtAuthenticationConverter(ApplicationJwtPrincipalConverter applicationJwtPrincipalConverter) {
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtPrincipalConverter(applicationJwtPrincipalConverter);
+        return jwtAuthenticationConverter;
+    }
 
     @Bean
     SecurityFilterChain securityFilterChainOAuth2(HttpSecurity httpSecurity) {

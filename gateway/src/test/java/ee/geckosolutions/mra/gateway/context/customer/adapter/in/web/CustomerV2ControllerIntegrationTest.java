@@ -29,6 +29,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchElementV2Response;
@@ -37,10 +38,14 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
+import ee.geckosolutions.mra.gateway.security.config.SecurityConfiguration;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
 import ee.geckosolutions.mra.gateway.test.TestUtil;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -50,6 +55,16 @@ import org.springframework.http.ResponseEntity;
 import tools.jackson.databind.JsonNode;
 
 class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @BeforeEach
+    void beforeEach() {
+        Objects.requireNonNull(
+                cacheManager.getCache(SecurityConfiguration.USER_DETAILS_CACHE_NAME),
+                "User details cache must exist").clear();
+    }
 
     @Test
     void testThatSearchCustomersV2IsSuccessful() {
@@ -62,8 +77,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String secondCustomerName = "Bruce Wayne";
         String secondCustomerCode = "38204837747";
 
-        URI uri = URI.create("http://core.test/internal/api/v2/customers?page=0&size=2");
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer
+                .expect(requestTo(URI.create("http://core.test/internal/api/v2/customers?page=0&size=2")))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(
@@ -101,6 +116,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                         secondCustomerName,
                                         secondCustomerCode),
                                 MediaType.APPLICATION_JSON));
+
+        mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(TestUtil.getToken());
@@ -152,8 +169,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String lastName = "Norris";
         String personalIdentificationCode = "38208273384";
 
-        URI uri = URI.create("http://core.test/internal/api/v2/customers/" + customerId);
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer
+                .expect(requestTo(URI.create("http://core.test/internal/api/v2/customers/" + customerId)))
                 .andExpect(method(HttpMethod.GET))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(
@@ -162,6 +179,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                         + "\",\"lastName\":\"" + lastName + "\",\"personalIdentificationCode\":\""
                                         + personalIdentificationCode + "\"}",
                                 MediaType.APPLICATION_JSON));
+
+        mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.setBearerAuth(TestUtil.getToken());
@@ -193,8 +212,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         String name = "Chuck Norris Ltd.";
         String registrationCode = "US656799";
 
-        URI uri = URI.create("http://core.test/internal/api/v2/customers");
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer.expect(requestTo(URI.create("http://core.test/internal/api/v2/customers")))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
@@ -204,6 +222,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                                 "{\"id\":\"" + customerId + "\",\"type\":\"LEGAL_ENTITY\",\"name\":\"" + name
                                         + "\",\"registrationCode\":\"" + registrationCode + "\"}",
                                 MediaType.APPLICATION_JSON));
+
+        mockAuthenticatedUser();
 
         NewLegalEntityCustomerV2 newLegalEntityCustomerV2 = NewLegalEntityCustomerV2.builder()
                 .name(name)
@@ -241,12 +261,13 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 {"id":"%s","errorCode":"general.technical.input-validation","message":"%s"}
                 """.formatted(errorId, errorMessage);
 
-        URI uri = URI.create("http://core.test/internal/api/v2/customers");
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer.expect(requestTo(URI.create("http://core.test/internal/api/v2/customers")))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(withStatus(HttpStatus.BAD_REQUEST).contentType(MediaType.APPLICATION_JSON).body(errorResponseJson));
+
+        mockAuthenticatedUser();
 
         NewLegalEntityCustomerV2 invalidPayload = NewLegalEntityCustomerV2.builder().name("").registrationCode("").build();
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -276,12 +297,13 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     @Test
     void testThatInsertCustomerV2ConnectTimeoutReturnsServiceUnavailableErrorResponse() {
         // given
-        URI uri = URI.create("http://core.test/internal/api/v2/customers");
-        coreServiceMockRestServiceServer.expect(requestTo(uri))
+        coreServiceMockRestServiceServer.expect(requestTo(URI.create("http://core.test/internal/api/v2/customers")))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE))
                 .andRespond(withException(new ConnectException("Connect timed out")));
+
+        mockAuthenticatedUser();
 
         NewLegalEntityCustomerV2 validPayload = NewLegalEntityCustomerV2.builder()
                 .name("Timeout Ltd.")

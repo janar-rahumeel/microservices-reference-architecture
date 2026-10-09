@@ -31,6 +31,7 @@ import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCu
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,18 +50,21 @@ public class CustomerV2Controller implements CustomerV2Api {
 
     @Override
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_READ')")
     public Callable<ResponseEntity<byte[]>> search(@RequestParam MultiValueMap<String, String> parameters) {
         return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.search(parameters));
     }
 
     @Override
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_WRITE')")
     public Callable<ResponseEntity<byte[]>> insert(@RequestBody byte[] content) {
         return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.insert(content));
     }
 
     @Override
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_READ')")
     public Callable<ResponseEntity<byte[]>> get(@PathVariable UUID id) {
         return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.get(id));
     }

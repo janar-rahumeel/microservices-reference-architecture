@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.core.context.customer.adapter.in.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.awaitility.Awaitility.await;
 
 import java.util.List;
@@ -28,8 +29,10 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchElem
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchPageV2Response;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
+import ee.geckosolutions.mra.common.contract.customer.web.dto.NewPersonCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
 import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
+import ee.geckosolutions.mra.common.platform.web.dto.FieldErrorV2;
 import ee.geckosolutions.mra.core.context.customer.application.CustomerService;
 import ee.geckosolutions.mra.core.context.customer.domain.model.Customer;
 import ee.geckosolutions.mra.core.context.customer.domain.model.LegalEntityCustomer;
@@ -184,6 +187,38 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         assertThat(errorResponseV2.errorCode().getValue()).isEqualTo("customer.business.duplicate-entity");
         assertThat(errorResponseV2.message()).isEqualTo(
                 "Legal entity with registration code already exists: " + newLegalEntityCustomerV2.getRegistrationCode());
+    }
+
+    @Test
+    void testThatInsertCustomerV2ReturnsUnprocessableEntityWhenPersonalIdentificationCodeIsNotElevenDigits() {
+        // given
+        NewPersonCustomerV2 newPersonCustomerV2 = NewPersonCustomerV2.builder()
+                .firstName("Chuck")
+                .lastName("Norris")
+                .personalIdentificationCode("3810923986")
+                .build();
+
+        // when
+        ResponseEntity<ErrorResponseV2> responseEntity = testRestTemplate.exchange(
+                "/internal/api/v2/customers",
+                HttpMethod.POST,
+                TestUtil.jsonHttpEntity(newPersonCustomerV2),
+                ErrorResponseV2.class);
+
+        // then
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
+        assertThat(responseEntity.getHeaders().getContentType()).isEqualTo(MediaType.APPLICATION_JSON);
+
+        ErrorResponseV2 errorResponseV2 = responseEntity.getBody();
+        assertThat(errorResponseV2).isNotNull();
+        assertThat(errorResponseV2.id()).isNotNull();
+        assertThat(errorResponseV2.errorCode().getValue()).isEqualTo("general.business.invariant-violation");
+        assertThat(errorResponseV2.fieldErrors()).extracting(FieldErrorV2::field, fieldError -> fieldError.code().getValue())
+                .containsExactly(tuple("personalIdentificationCode", "validation.exact-digits"));
+        assertThat(errorResponseV2.fieldErrors())
+                .filteredOn(fieldError -> fieldError.field().equals("personalIdentificationCode"))
+                .singleElement()
+                .satisfies(fieldError -> assertThat(fieldError.parameters()).containsEntry("length", 11));
     }
 
 }

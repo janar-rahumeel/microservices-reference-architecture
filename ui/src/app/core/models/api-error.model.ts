@@ -1,11 +1,12 @@
-export interface EntityFieldValidationError {
-    fieldName: string;
-    validationErrorMessage: string;
+export interface FieldError {
+    field: string;
+    code: string;
+    parameters?: Record<string, unknown>;
 }
 
 export interface ApiError {
-    uuid?: string;
-    timestamp: Date;
+    id?: string;
+    errorCode?: string;
     message?: string;
-    entityFieldValidationErrors: EntityFieldValidationError[];
+    fieldErrors?: FieldError[];
 }

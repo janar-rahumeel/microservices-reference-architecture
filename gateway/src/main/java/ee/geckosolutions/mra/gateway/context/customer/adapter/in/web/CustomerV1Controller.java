@@ -29,6 +29,7 @@ import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCu
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -46,12 +47,14 @@ public class CustomerV1Controller implements CustomerV1Api {
 
     @Override
     @GetMapping(path = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_READ')")
     public ResponseEntity<byte[]> get(@PathVariable UUID id) {
         return ControllerSupport.executeHttpRequest(() -> internalCustomerV1Client.get(id));
     }
 
     @Override
     @PostMapping(path = "", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_WRITE')")
     public ResponseEntity<byte[]> insert(@RequestBody byte[] content) {
         return ControllerSupport.executeHttpRequest(() -> internalCustomerV1Client.insert(content));
     }

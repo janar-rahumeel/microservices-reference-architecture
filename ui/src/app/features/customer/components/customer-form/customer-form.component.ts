@@ -38,7 +38,7 @@ export class CustomerFormComponent extends AbstractEditEntityDirective<CustomerS
         type: new FormControl(CustomerType.Person, Validators.required),
         firstName: new FormControl(undefined, Validators.required),
         lastName: new FormControl(undefined, Validators.required),
-        personalIdentificationCode: new FormControl(undefined, Validators.required),
+        personalIdentificationCode: new FormControl(undefined, [Validators.required, Validators.pattern(/^\d{11}$/)]),
     });
     private readonly legalEntityForm: FormGroup = new FormGroup({
         type: new FormControl(CustomerType.LegalEntity, Validators.required),

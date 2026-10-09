@@ -26,38 +26,62 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import ee.geckosolutions.mra.common.platform.persistence.AbstractEntity;
 import ee.geckosolutions.mra.core.context.customer.domain.model.CustomerType;
 
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Table(name = "CUSTOMER")
+@Table(name = "customer")
 @Getter
 @Setter
 @Entity
-public class CustomerEntity {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class CustomerEntity extends AbstractEntity<UUID> {
 
     @Id
-    @Column(name = "ID")
+    @Setter(AccessLevel.NONE)
+    @Column(name = "id")
     private UUID id;
 
-    @Column(name = "TYPE")
+    @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private CustomerType type;
 
-    @Column(name = "FIRST_NAME")
+    @Column(name = "first_name")
     private String firstName;
 
-    @Column(name = "LAST_NAME")
+    @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "PERSONAL_IDENTIFICATION_CODE")
+    @Column(name = "personal_identification_code")
     private String personalIdentificationCode;
 
-    @Column(name = "NAME")
+    @Column(name = "name")
     private String name;
 
-    @Column(name = "REGISTRATION_CODE")
+    @Column(name = "registration_code")
     private String registrationCode;
+
+    @Builder(access = AccessLevel.PUBLIC)
+    private CustomerEntity(
+            UUID id,
+            CustomerType type,
+            String firstName,
+            String lastName,
+            String personalIdentificationCode,
+            String name,
+            String registrationCode) {
+        this.id = id;
+        this.type = type;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.personalIdentificationCode = personalIdentificationCode;
+        this.name = name;
+        this.registrationCode = registrationCode;
+    }
 
 }

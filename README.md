@@ -32,7 +32,6 @@ The configured local domains include:
 * `https://api.mra.local:8443` → API Gateway
 * `https://kc.mra.local:8443` → Keycloak
 
-
 ### 🔑 Identity & Authentication
 
 Start Keycloak infrastructure:
@@ -45,6 +44,14 @@ make deploy-keycloak
 URL: https://kc.mra.local:8443 (credentials mra:mra123)
 
 See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC configuration
+
+### 🐘 Database
+
+Start PostgreSQL (credentials mra:mra123):
+
+``` bash
+make deploy-mra-db
+```
 
 ### 🐇 Messaging (RabbitMQ)
 

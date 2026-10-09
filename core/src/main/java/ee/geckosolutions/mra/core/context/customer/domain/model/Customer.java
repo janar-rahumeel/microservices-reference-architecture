@@ -20,7 +20,7 @@ package ee.geckosolutions.mra.core.context.customer.domain.model;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.domain.AggregateRoot;
-import ee.geckosolutions.mra.core.context.customer.domain.exception.InvalidCustomerFieldException;
+import ee.geckosolutions.mra.common.domain.validation.Invariants;
 
 import lombok.Getter;
 
@@ -31,17 +31,9 @@ public abstract class Customer extends AggregateRoot {
     private final CustomerType type;
 
     protected Customer(UUID id, CustomerType type) {
-        this.id = requireNonBlank(id, "id");
-        this.type = requireNonBlank(type, "type");
-    }
-
-    protected static <T> T requireNonBlank(T value, String fieldName) {
-        if (value == null || (value instanceof String stringValue && stringValue.isBlank())) {
-            throw new InvalidCustomerFieldException(
-                    "customer.technical.field-validation",
-                    String.format("'%s' must not be blank", fieldName));
-        }
-        return value;
+        Invariants.check().notNull("id", id).notNull("type", type).throwIfViolated();
+        this.id = id;
+        this.type = type;
     }
 
 }

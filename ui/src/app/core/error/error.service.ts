@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { ValidationErrors } from '@angular/forms';
 import { ApiError } from '@core/models/api-error.model';
+import { translateErrorCode } from '@core/error/error-messages';
 
 @Injectable({ providedIn: 'root' })
 export class ErrorService {
@@ -30,30 +31,28 @@ export class ErrorService {
         break;
       default: {
         const error: ApiError | undefined = httpErrorResponse.error as ApiError | undefined;
-        this.push(error?.entityFieldValidationErrors ? error : this.buildError('EXCEPTION', 'Unknown error'));
+        this.push(error?.errorCode ? error : this.buildError('EXCEPTION', 'Unknown error'));
       }
     }
   }
 
-  private buildError(uuid: string, message: string): ApiError {
-    return {
-      uuid: uuid,
-      timestamp: new Date(),
-      message: message,
-      entityFieldValidationErrors: [],
-    };
+  private buildError(errorCode: string, message: string): ApiError {
+    return { errorCode: errorCode, message: message };
   }
 
   private push(error: ApiError): void {
-    console.error(`${String(error.timestamp)} [ERROR_UUID:${error.uuid ?? 'UNKNOWN'}] ${error.message ?? 'Unknown error'}`);
+    console.error(`${new Date().toISOString()} [ERROR_ID:${error.id ?? 'UNKNOWN'}] ${error.message ?? 'Unknown error'}`);
     this.globalErrorsSubject.next(error);
   }
 
   private handleFieldErrors(httpErrorResponse: HttpErrorResponse): void {
-    const error: ApiError = httpErrorResponse.error as ApiError;
+    const error: ApiError | undefined = httpErrorResponse.error as ApiError | undefined;
     const validationErrors: ValidationErrors = {};
-    for (const fieldError of error.entityFieldValidationErrors) {
-      validationErrors[fieldError.fieldName] = fieldError.validationErrorMessage;
+    for (const fieldError of error?.fieldErrors ?? []) {
+      validationErrors[fieldError.field] = translateErrorCode(fieldError.code, fieldError.parameters);
+    }
+    if (Object.keys(validationErrors).length === 0) {
+      validationErrors['general'] = translateErrorCode(error?.errorCode ?? '', undefined, error?.message ?? 'Unprocessable request');
     }
     this.entityFieldValidationErrorsSubject.next(validationErrors);
   }

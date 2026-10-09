@@ -15,15 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.mra.core.context.customer.domain.exception;
+package ee.geckosolutions.mra.core.context.access.domain.model;
 
-import ee.geckosolutions.mra.common.domain.exception.AbstractDomainException;
-import ee.geckosolutions.mra.common.domain.exception.DomainExceptionType;
+import java.util.Set;
 
-public class InvalidCustomerFieldException extends AbstractDomainException {
+import ee.geckosolutions.mra.common.domain.validation.Invariants;
 
-    public InvalidCustomerFieldException(String errorCode, String message) {
-        super(DomainExceptionType.FIELD_VALIDATION, errorCode, message);
+import lombok.Getter;
+
+@Getter
+public final class Role {
+
+    private final String name;
+    private final boolean enabled;
+    private final Set<Permission> permissions;
+
+    public Role(String name, boolean enabled, Set<Permission> permissions) {
+        Invariants.check().notBlank("name", name).notEmpty("permissions", permissions).throwIfViolated();
+        this.name = name;
+        this.enabled = enabled;
+        this.permissions = Set.copyOf(permissions);
     }
 
 }

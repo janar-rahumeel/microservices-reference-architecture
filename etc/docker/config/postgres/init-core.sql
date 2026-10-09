@@ -1,0 +1,2 @@
+CREATE ROLE core WITH LOGIN PASSWORD 'core-secret';
+CREATE DATABASE core OWNER core;

@@ -14,18 +14,25 @@ package ee.geckosolutions.mra.common.platform.autoconfigure;
 
 import java.util.function.Predicate;
 
+import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextContributor;
+import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextFilter;
+import ee.geckosolutions.mra.common.platform.observation.ecs.UserEcsLoggingContextContributor;
 import ee.geckosolutions.mra.common.platform.web.DefaultExceptionHandler;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
 
 import io.micrometer.context.ContextRegistry;
 import io.micrometer.context.ContextSnapshot;
 import io.micrometer.context.ContextSnapshotFactory;
+import io.micrometer.context.integration.Slf4jThreadLocalAccessor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.web.SecurityFilterChain;
 import org.zalando.logbook.HttpRequest;
 import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
 import org.zalando.logbook.core.Conditions;
@@ -47,6 +54,11 @@ public class CommonPlatformWebAutoConfiguration {
         return new ErrorResponseV2ExceptionHandler();
     }
 
+    @Bean
+    EcsLoggingContextFilter ecsLoggingContextFilter(ObjectProvider<EcsLoggingContextContributor> objectProvider) {
+        return new EcsLoggingContextFilter(objectProvider.orderedStream().toList());
+    }
+
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(LogbookAutoConfiguration.class)
     static class LogbookConfiguration {
@@ -58,7 +70,9 @@ public class CommonPlatformWebAutoConfiguration {
 
         @Bean
         ContextSnapshotFactory contextSnapshotFactory() {
-            return ContextSnapshotFactory.builder().contextRegistry(ContextRegistry.getInstance()).build();
+            ContextRegistry contextRegistry = ContextRegistry.getInstance()
+                    .registerThreadLocalAccessor(new Slf4jThreadLocalAccessor());
+            return ContextSnapshotFactory.builder().contextRegistry(contextRegistry).build();
         }
 
         @Bean
@@ -71,6 +85,18 @@ public class CommonPlatformWebAutoConfiguration {
                     }
                 };
             };
+        }
+
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(SecurityFilterChain.class) // TODO change when every MS requires security
+    static class SecurityConfiguration {
+
+        @Bean
+        @ConditionalOnBean(SecurityFilterChain.class)
+        EcsLoggingContextContributor userEcsLoggingContextContributor() {
+            return new UserEcsLoggingContextContributor();
         }
 
     }

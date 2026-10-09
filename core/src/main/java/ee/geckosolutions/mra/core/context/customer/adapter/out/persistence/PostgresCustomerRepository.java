@@ -63,7 +63,7 @@ public class PostgresCustomerRepository implements CustomerRepository {
                 .map(PostgresCustomerRepository::toDomain);
     }
 
-    private Specification<CustomerEntity> hasNamePattern(String partialName) {
+    private Specification<CustomerEntity> hasNamePattern(@Nullable String partialName) {
         if (StringUtils.isBlank(partialName)) {
             return Specification.unrestricted();
         }
@@ -75,7 +75,7 @@ public class PostgresCustomerRepository implements CustomerRepository {
                 builder.like(builder.lower(root.get("name")), pattern));
     }
 
-    private Specification<CustomerEntity> hasCodePattern(Long partialCode) {
+    private Specification<CustomerEntity> hasCodePattern(@Nullable Long partialCode) {
         if (partialCode == null) {
             return Specification.unrestricted();
         }
@@ -149,21 +149,21 @@ public class PostgresCustomerRepository implements CustomerRepository {
     }
 
     private static CustomerEntity toEntity(Customer customer) {
-        CustomerEntity customerEntity = new CustomerEntity();
-        customerEntity.setId(customer.getId());
-        customerEntity.setType(customer.getType());
+        CustomerEntity.CustomerEntityBuilder customerEntityBuilder = CustomerEntity.builder()
+                .id(customer.getId())
+                .type(customer.getType());
 
         if (customer instanceof PersonCustomer personCustomer) {
-            customerEntity.setFirstName(personCustomer.getFirstName());
-            customerEntity.setLastName(personCustomer.getLastName());
-            customerEntity.setPersonalIdentificationCode(personCustomer.getPersonalIdentificationCode());
-            return customerEntity;
+            return customerEntityBuilder.firstName(personCustomer.getFirstName())
+                    .lastName(personCustomer.getLastName())
+                    .personalIdentificationCode(personCustomer.getPersonalIdentificationCode())
+                    .build();
         }
 
         if (customer instanceof LegalEntityCustomer legalEntityCustomer) {
-            customerEntity.setName(legalEntityCustomer.getName());
-            customerEntity.setRegistrationCode(legalEntityCustomer.getRegistrationCode());
-            return customerEntity;
+            return customerEntityBuilder.name(legalEntityCustomer.getName())
+                    .registrationCode(legalEntityCustomer.getRegistrationCode())
+                    .build();
         }
 
         throw new IllegalArgumentException("Unsupported customer type: " + customer.getClass().getName());
