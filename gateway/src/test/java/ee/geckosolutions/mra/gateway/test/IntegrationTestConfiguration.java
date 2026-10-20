@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.SecretKey;
 
+import ee.geckosolutions.mra.common.test.TestJwtUtil;
 import ee.geckosolutions.mra.gateway.config.ApplicationConfiguration;
 
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -70,7 +71,7 @@ class IntegrationTestConfiguration {
 
     @Bean
     JwtDecoder jwtDecoder() {
-        SecretKey secretKey = TestUtil.resolveJwtSecretKey();
+        SecretKey secretKey = TestJwtUtil.resolveJwtSecretKey();
         return NimbusJwtDecoder.withSecretKey(secretKey).macAlgorithm(MacAlgorithm.HS256).build();
     }
 

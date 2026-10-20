@@ -17,14 +17,15 @@
  */
 package ee.geckosolutions.mra.gateway.security;
 
-import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.DefaultOAuth2AuthenticatedPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
@@ -32,17 +33,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ApplicationJwtPrincipalConverter implements Converter<Jwt, OAuth2AuthenticatedPrincipal> {
 
-    private final ApplicationUserDetailsService userDetailsService;
+    private final AuthenticationService authenticationService;
 
     @Override
     public OAuth2AuthenticatedPrincipal convert(Jwt jwt) {
-        String username = Objects
-                .requireNonNull(jwt.getClaimAsString("preferred_username"), "JWT claim 'preferred_username' is missing");
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-        return new DefaultOAuth2AuthenticatedPrincipal(
-                userDetails.getUsername(),
-                jwt.getClaims(),
-                new ArrayList<>(userDetails.getAuthorities()));
+        UUID id = UUID.fromString(Objects.requireNonNull(jwt.getSubject(), "JWT claim 'sub' is missing"));
+        User user = authenticationService.getUserById(id);
+        return new DefaultOAuth2User(user.getAuthorities(), jwt.getClaims(), StandardClaimNames.PREFERRED_USERNAME);
     }
 
 }

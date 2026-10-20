@@ -12,7 +12,9 @@
  */
 package ee.geckosolutions.mra.common.platform.observation.ecs;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 import ch.qos.logback.classic.pattern.ThrowableProxyConverter;
@@ -35,14 +37,17 @@ import org.springframework.util.Assert;
 /**
  * Custom ECS structured log formatter with an MDC allow-list
  *
- * <p>
- * Only traceId and spanId are mapped from MDC
- * </p>
- *
  * @see org.springframework.boot.logging.logback.ElasticCommonSchemaStructuredLogFormatter
  */
 @Slf4j
 public class EcsStructuredLogFormatter extends JsonWriterStructuredLogFormatter<ILoggingEvent> {
+
+    /**
+     * MDC values are strings, so multi-valued ECS fields are carried joined by this separator.
+     */
+    static final String MULTI_VALUE_SEPARATOR = ",";
+
+    private static final Set<String> MULTI_VALUED_FIELDS = Set.of("user.roles");
 
     private static final JsonWriter.PairExtractor<KeyValuePair> PAIR_EXTRACTOR = JsonWriter.PairExtractor
             .of((pair) -> pair.key, (pair) -> pair.value);
@@ -91,7 +96,10 @@ public class EcsStructuredLogFormatter extends JsonWriterStructuredLogFormatter<
 
                 mdcPropertyMap.forEach((key, value) -> {
                     if (key.startsWith("ecs:") && value != null) {
-                        consumer.accept(key.substring("ecs:".length()), value);
+                        String field = key.substring("ecs:".length());
+                        consumer.accept(
+                                field,
+                                MULTI_VALUED_FIELDS.contains(field) ? List.of(value.split(MULTI_VALUE_SEPARATOR)) : value);
                     }
                 });
             });

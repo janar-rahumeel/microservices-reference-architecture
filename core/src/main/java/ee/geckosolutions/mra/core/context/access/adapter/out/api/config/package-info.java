@@ -10,13 +10,5 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-package ee.geckosolutions.mra.common.platform.validation;
-
-import io.swagger.v3.oas.annotations.media.Schema;
-
-@Schema(type = "string", example = "string")
-public interface ErrorCode {
-
-    String getValue();
-
-}
+@org.jspecify.annotations.NullMarked
+package ee.geckosolutions.mra.core.context.access.adapter.out.api.config;

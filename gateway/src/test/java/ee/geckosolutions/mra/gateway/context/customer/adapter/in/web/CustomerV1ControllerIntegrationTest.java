@@ -32,9 +32,9 @@ import java.util.UUID;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerV1;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewCustomerV1;
+import ee.geckosolutions.mra.common.test.TestJwtUtil;
 import ee.geckosolutions.mra.gateway.security.config.SecurityConfiguration;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
-import ee.geckosolutions.mra.gateway.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,9 +55,8 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
     @BeforeEach
     void beforeEach() {
-        Objects.requireNonNull(
-                cacheManager.getCache(SecurityConfiguration.USER_DETAILS_CACHE_NAME),
-                "User details cache must exist").clear();
+        Objects.requireNonNull(cacheManager.getCache(SecurityConfiguration.USER_CACHE_NAME), "User details cache must exist")
+                .clear();
     }
 
     @Test
@@ -82,7 +81,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(TestUtil.getToken());
+        httpHeaders.setBearerAuth(TestJwtUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 
@@ -137,7 +136,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
                 .registrationCode(registrationCode)
                 .build();
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(TestUtil.getToken());
+        httpHeaders.setBearerAuth(TestJwtUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<NewCustomerV1> httpEntity = new HttpEntity<>(newCustomerV1, httpHeaders);
@@ -184,7 +183,7 @@ class CustomerV1ControllerIntegrationTest extends AbstractWebIntegrationTest {
         mockAuthenticatedUser();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.setBearerAuth(TestUtil.getToken());
+        httpHeaders.setBearerAuth(TestJwtUtil.getToken());
         httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
         HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
 

@@ -63,3 +63,30 @@ curl -X POST "https://kc.mra.local:9443/realms/mra/protocol/openid-connect/token
   - `E-mail verified = OFF`
   - Go to **Credentials → Set password (e.g. `mra-demo`)**
     - `Temporary = OFF` 
+
+## 5. Service Account for User Provisioning (core service)
+
+The `core` service creates users in Keycloak (`POST /internal/api/v1/users`) through the Admin REST API using a
+dedicated service account.
+
+- Go to **Clients → Create client (e.g. Type = `OpenID Connect`, ID = `mra-core`)**
+- Enable:
+  - `Client authentication = ON`
+  - `Service accounts roles = ✔`
+- Go to **Credentials**
+  - `Client Secret = mra-core-secret`
+- Go to **Service accounts roles → Assign role → Filter by clients → `realm-management`**
+  - Assign `manage-users` (least privilege; `view-users` is not required)
+
+Configure `core` accordingly:
+
+```properties
+application.keycloak.base-url=http://localhost:8100
+application.keycloak.realm=mra
+application.keycloak.service-account.client-id=mra-core
+application.keycloak.service-account.client-secret=mra-core-secret
+application.keycloak.required-actions[0]=UPDATE_PASSWORD
+```
+
+Users are created without credentials and with the configured required actions. Keycloak must be configured with
+`Duplicate emails = OFF` (default) so that duplicate e-mails are rejected with `409`.

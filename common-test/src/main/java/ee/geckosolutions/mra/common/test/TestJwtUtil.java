@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.mra.gateway.test;
+package ee.geckosolutions.mra.common.test;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -24,6 +24,7 @@ import java.util.List;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -31,9 +32,9 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-public final class TestUtil {
+public final class TestJwtUtil {
 
-    private TestUtil() {
+    private TestJwtUtil() {
     }
 
     private static final JwtEncoder JWT_ENCODER = NimbusJwtEncoder.withSecretKey(resolveJwtSecretKey())
@@ -57,7 +58,7 @@ public final class TestUtil {
                 .audience(List.of("mra"))
                 .issuedAt(now)
                 .expiresAt(now.plus(Duration.ofHours(1)))
-                .claim("preferred_username", "test")
+                .claim(StandardClaimNames.PREFERRED_USERNAME, "test")
                 .claim("scope", "email profile")
                 .build();
         return JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), jwtClaimsSet);

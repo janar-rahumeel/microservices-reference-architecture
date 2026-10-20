@@ -17,7 +17,6 @@
  */
 package ee.geckosolutions.mra.core.context.access.adapter.out.persistence.repository;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.core.context.access.adapter.out.persistence.entity.UserEntity;
@@ -26,7 +25,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface UserJpaRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
-
-    Optional<UserEntity> findByUsername(String username);
 
 }

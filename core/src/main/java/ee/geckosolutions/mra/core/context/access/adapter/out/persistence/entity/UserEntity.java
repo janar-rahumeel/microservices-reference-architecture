@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.core.context.access.adapter.out.persistence.entity;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,7 +31,6 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
-import ee.geckosolutions.mra.common.domain.identifier.UuidV7;
 import ee.geckosolutions.mra.common.platform.persistence.AbstractEntity;
 
 import lombok.AccessLevel;
@@ -38,6 +38,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.jspecify.annotations.Nullable;
 
 @Table(name = "\"user\"")
 @Getter
@@ -51,9 +52,6 @@ public class UserEntity extends AbstractEntity<UUID> {
     @Setter(AccessLevel.NONE)
     private UUID id;
 
-    @Column(name = "username")
-    private String username;
-
     @Column(name = "enabled")
     private boolean enabled = true;
 
@@ -66,9 +64,8 @@ public class UserEntity extends AbstractEntity<UUID> {
     private Set<RoleEntity> roles = new HashSet<>();
 
     @Builder(access = AccessLevel.PUBLIC)
-    private UserEntity(String username, Boolean enabled) {
-        this.id = UuidV7.generate();
-        this.username = username;
+    private UserEntity(UUID id, @Nullable Boolean enabled) {
+        this.id = Objects.requireNonNull(id, "id");
         this.enabled = enabled == null || enabled;
     }
 

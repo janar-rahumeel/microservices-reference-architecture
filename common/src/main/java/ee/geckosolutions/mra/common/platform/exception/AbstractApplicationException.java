@@ -12,18 +12,23 @@
  */
 package ee.geckosolutions.mra.common.platform.exception;
 
-import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
-
 import lombok.Getter;
 
 @Getter
-public abstract class AbstractApplicationException extends RuntimeException {
+public abstract class AbstractApplicationException extends RuntimeException implements ErrorDescriptor {
 
     private final ApplicationExceptionType type;
-    private final ErrorCode errorCode;
 
-    protected AbstractApplicationException(ApplicationExceptionType type, ErrorCode errorCode, String message) {
+    private final String errorCode;
+
+    protected AbstractApplicationException(ApplicationExceptionType type, String errorCode, String message) {
         super(message);
+        this.type = type;
+        this.errorCode = errorCode;
+    }
+
+    protected AbstractApplicationException(ApplicationExceptionType type, String errorCode, String message, Throwable cause) {
+        super(message, cause);
         this.type = type;
         this.errorCode = errorCode;
     }

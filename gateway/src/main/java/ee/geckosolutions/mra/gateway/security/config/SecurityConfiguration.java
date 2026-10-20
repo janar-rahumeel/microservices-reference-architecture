@@ -63,7 +63,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class SecurityConfiguration {
 
-    public static final String USER_DETAILS_CACHE_NAME = "userDetails";
+    public static final String USER_CACHE_NAME = "userDetails";
 
     private static final Set<String> PERMITTED_REQUEST_URI_PATTERNS = Set
             .of("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml", "/v3/api-docs");

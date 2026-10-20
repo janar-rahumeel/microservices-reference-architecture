@@ -12,18 +12,40 @@
  */
 package ee.geckosolutions.mra.common.domain.exception;
 
+import java.util.Optional;
+
+import ee.geckosolutions.mra.common.platform.exception.ErrorDescriptor;
+
 import lombok.Getter;
+import org.jspecify.annotations.Nullable;
 
 @Getter
-public abstract class AbstractDomainException extends RuntimeException {
+public abstract class AbstractDomainException extends RuntimeException implements ErrorDescriptor {
 
     private final DomainExceptionType type;
+
     private final String errorCode;
+
+    @Nullable
+    private final String details;
 
     protected AbstractDomainException(DomainExceptionType type, String errorCode, String message) {
         super(message);
         this.type = type;
         this.errorCode = errorCode;
+        this.details = null;
+    }
+
+    protected AbstractDomainException(DomainExceptionType type, String errorCode, String message, String details) {
+        super(message);
+        this.type = type;
+        this.errorCode = errorCode;
+        this.details = details;
+    }
+
+    @Override
+    public Optional<String> getDetails() {
+        return Optional.ofNullable(details);
     }
 
 }

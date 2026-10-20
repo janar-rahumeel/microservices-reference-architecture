@@ -11,4 +11,4 @@
  * For licensing information, contact: licensing@geckosolutions.ee
  */
 @org.jspecify.annotations.NullMarked
-package ee.geckosolutions.mra.common.platform.validation;
+package ee.geckosolutions.mra.core.context.access.domain.exception;

@@ -17,10 +17,15 @@
  */
 package ee.geckosolutions.mra.core.context.access.adapter.in.web;
 
+import java.net.URI;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import jakarta.validation.Valid;
+
+import ee.geckosolutions.mra.common.contract.access.web.dto.NewUserV1Request;
 import ee.geckosolutions.mra.common.contract.access.web.dto.UserV1Response;
 import ee.geckosolutions.mra.common.platform.observation.Adapter;
 import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
@@ -35,7 +40,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Adapter(direction = AdapterDirection.IN, type = AdapterType.REST, boundedContext = BoundedContext.ACCESS)
 @RequestMapping(value = "/internal/api/v1/users")
@@ -45,9 +53,24 @@ public class UserV1Controller {
 
     private final UserService userService;
 
-    @GetMapping(value = "/{username}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserV1Response> getByUsername(@PathVariable String username) {
-        User user = userService.getByUsername(username);
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserV1Response> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(toResponse(userService.getById(id)));
+    }
+
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserV1Response> create(@Valid @RequestBody NewUserV1Request request) {
+        User user = userService.createUser(
+                request.getUsername(),
+                request.getFirstName(),
+                request.getLastName(),
+                request.getEmail(),
+                request.getRoles());
+        URI location = UriComponentsBuilder.fromPath("/internal/api/v1/users/{id}").build(user.getId());
+        return ResponseEntity.created(location).body(toResponse(user));
+    }
+
+    private static UserV1Response toResponse(User user) {
         Set<String> authorities = Stream
                 .concat(
                         user.getRoles().stream().map(role -> "ROLE_" + role.getName()),
@@ -56,8 +79,7 @@ public class UserV1Controller {
                                 .flatMap(role -> role.getPermissions().stream())
                                 .map(permission -> "PERMISSION_" + permission.getName()))
                 .collect(Collectors.toSet());
-        return ResponseEntity
-                .ok(UserV1Response.builder().id(user.getId()).username(user.getUsername()).authorities(authorities).build());
+        return UserV1Response.builder().id(user.getId()).authorities(authorities).build();
     }
 
 }

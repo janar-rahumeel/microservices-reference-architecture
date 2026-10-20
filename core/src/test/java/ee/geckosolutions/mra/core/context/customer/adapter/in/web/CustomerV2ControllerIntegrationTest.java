@@ -184,7 +184,7 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         ErrorResponseV2 errorResponseV2 = responseEntity.getBody();
         assertThat(errorResponseV2).isNotNull();
         assertThat(errorResponseV2.id()).isNotNull();
-        assertThat(errorResponseV2.errorCode().getValue()).isEqualTo("customer.business.duplicate-entity");
+        assertThat(errorResponseV2.errorCode()).isEqualTo("customer.business.duplicate-entity");
         assertThat(errorResponseV2.message()).isEqualTo(
                 "Legal entity with registration code already exists: " + newLegalEntityCustomerV2.getRegistrationCode());
     }
@@ -212,8 +212,8 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
         ErrorResponseV2 errorResponseV2 = responseEntity.getBody();
         assertThat(errorResponseV2).isNotNull();
         assertThat(errorResponseV2.id()).isNotNull();
-        assertThat(errorResponseV2.errorCode().getValue()).isEqualTo("general.business.invariant-violation");
-        assertThat(errorResponseV2.fieldErrors()).extracting(FieldErrorV2::field, fieldError -> fieldError.code().getValue())
+        assertThat(errorResponseV2.errorCode()).isEqualTo("general.business.invariant-violation");
+        assertThat(errorResponseV2.fieldErrors()).extracting(FieldErrorV2::field, FieldErrorV2::code)
                 .containsExactly(tuple("personalIdentificationCode", "validation.exact-digits"));
         assertThat(errorResponseV2.fieldErrors())
                 .filteredOn(fieldError -> fieldError.field().equals("personalIdentificationCode"))

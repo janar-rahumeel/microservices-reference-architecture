@@ -17,6 +17,8 @@
  */
 package ee.geckosolutions.mra.core.context.access.adapter.out.persistence.repository;
 
+import java.util.Collection;
+import java.util.Set;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.core.context.access.adapter.out.persistence.entity.RoleEntity;
@@ -25,5 +27,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface RoleJpaRepository extends JpaRepository<RoleEntity, UUID>, JpaSpecificationExecutor<RoleEntity> {
+
+    Set<RoleEntity> findAllByNameIn(Collection<String> names);
 
 }

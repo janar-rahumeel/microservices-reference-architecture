@@ -17,24 +17,69 @@
  */
 package ee.geckosolutions.mra.core.context.access.application;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import ee.geckosolutions.mra.common.domain.validation.Invariants;
 import ee.geckosolutions.mra.common.platform.observation.ApplicationService;
 import ee.geckosolutions.mra.common.platform.observation.BoundedContext;
 import ee.geckosolutions.mra.core.context.access.application.exception.UserNotFoundException;
+import ee.geckosolutions.mra.core.context.access.application.port.IdentityProvider;
+import ee.geckosolutions.mra.core.context.access.application.port.IdentityProvider.NewIdentity;
+import ee.geckosolutions.mra.core.context.access.application.port.RoleRepository;
 import ee.geckosolutions.mra.core.context.access.application.port.UserRepository;
+import ee.geckosolutions.mra.core.context.access.domain.model.Role;
 import ee.geckosolutions.mra.core.context.access.domain.model.User;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @ApplicationService(boundedContext = BoundedContext.ACCESS)
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final IdentityProvider identityProvider;
 
     @Transactional(readOnly = true)
-    public User getByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
+    public User getById(UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+    }
+
+    public User createUser(String username, String firstName, String lastName, String email, Set<String> roleNames) {
+        Set<Role> roles = resolveRoles(roleNames);
+        UUID identityUserId = identityProvider.createUser(new NewIdentity(username, firstName, lastName, email));
+        try {
+            return userRepository.create(User.create(identityUserId, roles));
+        } catch (Exception e) {
+            revert(identityUserId, e);
+            throw e;
+        }
+    }
+
+    private Set<Role> resolveRoles(Set<String> roleNames) {
+        Set<Role> roles = roleRepository.findByNames(roleNames);
+        Set<String> unknownRoleNames = new TreeSet<>(roleNames);
+        unknownRoleNames.removeAll(roles.stream().map(Role::getName).collect(Collectors.toSet()));
+        Invariants.check()
+                .that(unknownRoleNames.isEmpty(), "roles", "validation.unknown-role", Map.of("names", unknownRoleNames))
+                .throwIfViolated();
+        return roles;
+    }
+
+    private void revert(UUID identityUserId, Exception cause) {
+        try {
+            identityProvider.deleteUser(identityUserId);
+        } catch (Exception e) {
+            log.error("Failed to delete orphaned identity {}", identityUserId, e);
+            cause.addSuppressed(e);
+        }
     }
 
 }

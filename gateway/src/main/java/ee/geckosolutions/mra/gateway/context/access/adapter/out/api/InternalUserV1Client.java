@@ -17,6 +17,8 @@
  */
 package ee.geckosolutions.mra.gateway.context.access.adapter.out.api;
 
+import java.util.UUID;
+
 import ee.geckosolutions.mra.common.contract.access.web.dto.UserV1Response;
 import ee.geckosolutions.mra.common.platform.observation.Adapter;
 import ee.geckosolutions.mra.common.platform.observation.AdapterDirection;
@@ -32,7 +34,7 @@ import org.springframework.web.service.annotation.HttpExchange;
 @HttpExchange(url = "/internal/api/v1/users")
 public interface InternalUserV1Client {
 
-    @GetExchange(url = "/{username}", accept = MediaType.APPLICATION_JSON_VALUE)
-    ResponseEntity<UserV1Response> get(@PathVariable String username);
+    @GetExchange(url = "/{id}", accept = MediaType.APPLICATION_JSON_VALUE)
+    ResponseEntity<UserV1Response> get(@PathVariable UUID id);
 
 }
