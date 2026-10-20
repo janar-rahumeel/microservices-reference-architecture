@@ -17,15 +17,15 @@
  */
 package ee.geckosolutions.mra.core.context.access.application.exception;
 
+import java.util.UUID;
+
 import ee.geckosolutions.mra.common.platform.exception.AbstractApplicationException;
 import ee.geckosolutions.mra.common.platform.exception.ApplicationExceptionType;
 
 public class UserNotFoundException extends AbstractApplicationException {
 
-    public UserNotFoundException(String username) {
-        super(ApplicationExceptionType.ENTITY_NOT_FOUND,
-              () -> "user.technical.entity-not-found",
-              "User not found by username: " + username);
+    public UserNotFoundException(UUID id) {
+        super(ApplicationExceptionType.ENTITY_NOT_FOUND, "user.technical.entity-not-found", "User not found by id: " + id);
     }
 
 }

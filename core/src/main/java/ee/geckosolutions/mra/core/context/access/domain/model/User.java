@@ -29,16 +29,18 @@ import lombok.Getter;
 public final class User extends AggregateRoot {
 
     private final UUID id;
-    private final String username;
     private final boolean enabled;
     private final Set<Role> roles;
 
-    public User(UUID id, String username, boolean enabled, Set<Role> roles) {
-        Invariants.check().notNull("id", id).notBlank("username", username).notEmpty("roles", roles).throwIfViolated();
+    public User(UUID id, boolean enabled, Set<Role> roles) {
+        Invariants.check().notNull("id", id).notEmpty("roles", roles).throwIfViolated();
         this.id = id;
-        this.username = username;
         this.enabled = enabled;
         this.roles = roles;
+    }
+
+    public static User create(UUID id, Set<Role> roles) {
+        return new User(id, true, roles);
     }
 
 }

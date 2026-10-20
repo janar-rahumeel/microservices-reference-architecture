@@ -17,26 +17,27 @@
  */
 package ee.geckosolutions.mra.gateway.security;
 
+import java.util.UUID;
+
 import ee.geckosolutions.mra.common.platform.observation.ApplicationService;
 import ee.geckosolutions.mra.gateway.context.access.application.port.UserRepository;
 import ee.geckosolutions.mra.gateway.security.config.SecurityConfiguration;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.User;
 
 @ApplicationService
 @RequiredArgsConstructor
-public class ApplicationUserDetailsService implements UserDetailsService {
+public class AuthenticationService {
 
     private final UserRepository userRepository;
 
-    @Override
-    @Cacheable(cacheNames = SecurityConfiguration.USER_DETAILS_CACHE_NAME, key = "#username")
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException(username));
+    @Cacheable(cacheNames = SecurityConfiguration.USER_CACHE_NAME, key = "#id")
+    public User getUserById(UUID id) throws AuthenticationException {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new AuthenticatedUserNotFoundException("User not found by id: " + id));
     }
 
 }

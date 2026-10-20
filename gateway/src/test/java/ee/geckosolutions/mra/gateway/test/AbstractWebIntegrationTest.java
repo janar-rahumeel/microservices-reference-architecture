@@ -48,12 +48,12 @@ public abstract class AbstractWebIntegrationTest {
     protected MockRestServiceServer coreServiceMockRestServiceServer;
 
     protected void mockAuthenticatedUser() {
-        coreServiceMockRestServiceServer.expect(requestTo("http://core.test/internal/api/v1/users/test"))
+        coreServiceMockRestServiceServer
+                .expect(requestTo("http://core.test/internal/api/v1/users/04f47c28-9097-455e-806c-1ebc6a6295ed"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("""
                         {
-                          "id": "3fa85f64-5717-4562-b3fc-2c963f66afa5",
-                          "username": "test",
+                          "id": "04f47c28-9097-455e-806c-1ebc6a6295ed",
                           "authorities": [
                             "ROLE_USER",
                             "PERMISSION_CUSTOMER_READ",

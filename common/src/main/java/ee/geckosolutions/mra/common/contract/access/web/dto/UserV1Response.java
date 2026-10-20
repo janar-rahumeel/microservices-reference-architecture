@@ -29,15 +29,9 @@ public class UserV1Response {
 
     @Schema(
             requiredMode = Schema.RequiredMode.REQUIRED,
-            description = "Unique identifier of the user",
+            description = "Unique identifier of the user, equal to the identity provider subject",
             example = "3fa85f64-5717-4562-b3fc-2c963f66afa5")
     private final UUID id;
-
-    @Schema(
-            requiredMode = Schema.RequiredMode.REQUIRED,
-            description = "Username used to identify the user",
-            example = "mra-demo")
-    private final String username;
 
     @Schema(
             requiredMode = Schema.RequiredMode.REQUIRED,

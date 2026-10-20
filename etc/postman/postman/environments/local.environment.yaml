@@ -10,3 +10,5 @@ values:
     value: mra-api-secret
   - key: base_url
     value: 'https://api.mra.local:8443'
+  - key: core_base_url
+    value: 'http://localhost:8002'

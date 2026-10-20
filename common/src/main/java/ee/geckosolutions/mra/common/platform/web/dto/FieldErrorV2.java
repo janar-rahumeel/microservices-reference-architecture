@@ -14,12 +14,8 @@ package ee.geckosolutions.mra.common.platform.web.dto;
 
 import java.util.Map;
 
-import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
-import ee.geckosolutions.mra.common.platform.web.jackson.ErrorCodeSerializer;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-import tools.jackson.databind.annotation.JsonSerialize;
 
-public record FieldErrorV2(String field, @JsonSerialize(using = ErrorCodeSerializer.class) ErrorCode code,
+public record FieldErrorV2(String field, String code,
         @JsonInclude(JsonInclude.Include.NON_EMPTY) Map<String, Object> parameters) {
 }

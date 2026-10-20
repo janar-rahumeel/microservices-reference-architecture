@@ -20,7 +20,7 @@ import ee.geckosolutions.mra.common.domain.exception.DomainExceptionType;
 import ee.geckosolutions.mra.common.domain.validation.InvariantViolationException;
 import ee.geckosolutions.mra.common.platform.exception.AbstractApplicationException;
 import ee.geckosolutions.mra.common.platform.exception.ApplicationExceptionType;
-import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
+import ee.geckosolutions.mra.common.platform.exception.ErrorDescriptor;
 import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 import ee.geckosolutions.mra.common.platform.web.dto.FieldErrorV2;
 
@@ -46,8 +46,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice(annotations = ErrorResponseV2Api.class)
 public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private static final ErrorCode GENERAL_ERROR_CODE = () -> "general.technical.error";
-    private static final ErrorCode FIELD_VALIDATION_ERROR_CODE = () -> "general.technical.field-validation";
+    private static final String GENERAL_ERROR_CODE = "general.technical.error";
+    private static final String FIELD_VALIDATION_ERROR_CODE = "general.technical.field-validation";
 
     @ExceptionHandler(AbstractApplicationException.class)
     public @Nullable ResponseEntity<Object> handleApplicationException(
@@ -64,6 +64,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
     private static HttpStatus map(ApplicationExceptionType applicationExceptionType) {
         return switch (applicationExceptionType) {
         case ENTITY_NOT_FOUND -> HttpStatus.NOT_FOUND;
+        case DEPENDENCY_FAILURE -> HttpStatus.BAD_GATEWAY;
         };
     }
 
@@ -73,11 +74,11 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
             WebRequest webRequest) {
         List<FieldErrorV2> fieldErrors = invariantViolationException.getViolations()
                 .stream()
-                .map(violation -> new FieldErrorV2(violation.field(), violation::code, violation.parameters()))
+                .map(violation -> new FieldErrorV2(violation.field(), violation.code(), violation.parameters()))
                 .toList();
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
-                invariantViolationException::getErrorCode,
+                invariantViolationException.getErrorCode(),
                 invariantViolationException.getMessage(),
                 fieldErrors);
         return handleExceptionInternal(
@@ -95,7 +96,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         HttpStatus httpStatus = map(domainException.getType());
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
-                domainException::getErrorCode,
+                domainException.getErrorCode(),
                 domainException.getMessage());
         return handleExceptionInternal(domainException, errorResponseV2Body, HttpHeaders.EMPTY, httpStatus, webRequest);
     }
@@ -113,7 +114,7 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
             WebRequest webRequest) {
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
-                () -> "general.technical.service-unavailable",
+                "general.technical.service-unavailable",
                 "Downstream service is unavailable");
         return handleExceptionInternal(
                 resourceAccessException,
@@ -145,21 +146,15 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
             HttpStatusCode httpStatusCode,
             WebRequest webRequest) {
         if (!(body instanceof ErrorResponseV2)) {
-            ErrorCode errorCode = resolveErrorCode(exception, httpStatusCode);
+            String errorCode = resolveErrorCode(exception, httpStatusCode);
             body = new ErrorResponseV2(UUID.randomUUID(), errorCode, exception.getMessage());
         }
 
-        ErrorResponseV2 errorResponseV2 = (ErrorResponseV2) body;
-        if (httpStatusCode.is5xxServerError()) {
-            log.error("[UUID: {}] Critical error has occurred", errorResponseV2.id(), exception);
-        } else {
-            log.warn("[UUID: {}] Non-critical error has occurred", errorResponseV2.id(), exception);
-        }
-
+        log(((ErrorResponseV2) body).id(), httpStatusCode, exception);
         return super.handleExceptionInternal(exception, body, httpHeaders, httpStatusCode, webRequest);
     }
 
-    private static ErrorCode resolveErrorCode(Exception exception, HttpStatusCode httpStatusCode) {
+    private static String resolveErrorCode(Exception exception, HttpStatusCode httpStatusCode) {
         if (exception instanceof MethodArgumentNotValidException || exception instanceof HandlerMethodValidationException
                 || exception instanceof MethodValidationException) {
             return FIELD_VALIDATION_ERROR_CODE;
@@ -167,14 +162,32 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         return resolveErrorCode(httpStatusCode);
     }
 
-    private static ErrorCode resolveErrorCode(HttpStatusCode httpStatusCode) {
+    private static String resolveErrorCode(HttpStatusCode httpStatusCode) {
         return switch (httpStatusCode.value()) {
         case 400 -> FIELD_VALIDATION_ERROR_CODE;
-        case 404 -> () -> "general.technical.entity-not-found";
-        case 409 -> () -> "general.business.duplicate-entity";
-        case 422 -> () -> "general.business.rule-violation";
+        case 404 -> "general.technical.entity-not-found";
+        case 409 -> "general.business.duplicate-entity";
+        case 422 -> "general.business.rule-violation";
+        case 502 -> "general.technical.dependency-failure";
         default -> GENERAL_ERROR_CODE;
         };
+    }
+
+    private static void log(UUID errorId, HttpStatusCode httpStatusCode, Exception exception) {
+        String message = "[UUID: %s] Request failed with HTTP status %s".formatted(errorId, httpStatusCode);
+
+        if (exception instanceof ErrorDescriptor errorDescriptor) {
+            message += ": %s - %s"
+                    .formatted(errorDescriptor.getErrorCode(), errorDescriptor.getDetails().orElseGet(exception::getMessage));
+        }
+
+        if (httpStatusCode.is5xxServerError()) {
+            log.error(message, exception);
+        } else if (exception instanceof AbstractDomainException) {
+            log.info(message);
+        }
+
+        log.warn(message, exception);
     }
 
 }

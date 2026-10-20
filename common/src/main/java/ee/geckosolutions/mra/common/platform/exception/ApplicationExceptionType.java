@@ -14,6 +14,7 @@ package ee.geckosolutions.mra.common.platform.exception;
 
 public enum ApplicationExceptionType {
 
-    ENTITY_NOT_FOUND
+    ENTITY_NOT_FOUND,
+    DEPENDENCY_FAILURE
 
 }

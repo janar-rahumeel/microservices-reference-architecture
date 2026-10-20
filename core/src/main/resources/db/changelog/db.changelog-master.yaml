@@ -4,5 +4,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/changes/MRA-14-create-rbac-tables.sql
   - include:
+      file: db/changelog/changes/MRA-15-use-identity-id-as-user-id.sql
+  - include:
       file: db/changelog/data/init-local.sql
       context: local

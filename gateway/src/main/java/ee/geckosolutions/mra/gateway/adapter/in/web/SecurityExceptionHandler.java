@@ -24,7 +24,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
 import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 import ee.geckosolutions.mra.gateway.config.ApplicationProperties;
 
@@ -63,12 +62,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
 
         if (!httpServletResponse.isCommitted()) {
             UUID errorId = UUID.randomUUID();
-            log.warn("[UUID: {}] Non-critical error has occurred", errorId, authenticationException);
-            writeErrorResponseV2(
-                    httpServletResponse,
-                    errorId,
-                    () -> "general.technical.unauthorized",
-                    "Authentication is required");
+            log.warn("[UUID: {}] Request failed with HTTP status 401", errorId, authenticationException);
+            writeErrorResponseV2(httpServletResponse, errorId, "general.technical.unauthorized", "Authentication is required");
         }
     }
 
@@ -85,8 +80,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
 
         if (!httpServletResponse.isCommitted()) {
             UUID errorId = UUID.randomUUID();
-            log.warn("[UUID: {}] Non-critical error has occurred", errorId, accessDeniedException);
-            writeErrorResponseV2(httpServletResponse, errorId, () -> "general.technical.forbidden", "Access is denied");
+            log.warn("[UUID: {}] Request failed with HTTP status 403", errorId, accessDeniedException);
+            writeErrorResponseV2(httpServletResponse, errorId, "general.technical.forbidden", "Access is denied");
         }
     }
 
@@ -94,11 +89,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         return httpServletRequest.getRequestURI().startsWith("/api/v1/");
     }
 
-    private void writeErrorResponseV2(
-            HttpServletResponse httpServletResponse,
-            UUID errorId,
-            ErrorCode errorCode,
-            String message) throws IOException {
+    private void writeErrorResponseV2(HttpServletResponse httpServletResponse, UUID errorId, String errorCode, String message)
+            throws IOException {
         httpServletResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(httpServletResponse.getOutputStream(), new ErrorResponseV2(errorId, errorCode, message));
     }

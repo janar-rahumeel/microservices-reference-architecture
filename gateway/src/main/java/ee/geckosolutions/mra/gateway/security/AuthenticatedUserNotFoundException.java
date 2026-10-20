@@ -15,21 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ee.geckosolutions.mra.core.test;
+package ee.geckosolutions.mra.gateway.security;
 
-import ee.geckosolutions.mra.common.platform.validation.ErrorCode;
+import org.springframework.security.core.AuthenticationException;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.JsonParser;
-import tools.jackson.databind.DeserializationContext;
-import tools.jackson.databind.ValueDeserializer;
+class AuthenticatedUserNotFoundException extends AuthenticationException {
 
-class ErrorCodeDeserializer extends ValueDeserializer<ErrorCode> {
-
-    @Override
-    public ErrorCode deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws JacksonException {
-        String value = jsonParser.getValueAsString();
-        return () -> value;
+    public AuthenticatedUserNotFoundException(String message) {
+        super(message);
     }
 
 }

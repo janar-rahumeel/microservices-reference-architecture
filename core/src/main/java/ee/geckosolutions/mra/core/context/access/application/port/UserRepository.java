@@ -18,11 +18,14 @@
 package ee.geckosolutions.mra.core.context.access.application.port;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import ee.geckosolutions.mra.core.context.access.domain.model.User;
 
 public interface UserRepository {
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findById(UUID id);
+
+    User create(User user);
 
 }

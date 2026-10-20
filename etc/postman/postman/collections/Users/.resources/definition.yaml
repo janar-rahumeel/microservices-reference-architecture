@@ -1,0 +1,12 @@
+$kind: collection
+auth:
+  - id: ee619d33-ef31-4606-a13b-f5c1cbabe770
+    type: oauth2
+    name: OAuth 2.0
+    credentials:
+      addTokenTo: header
+      authUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"
+      clientId: "{{client_id}}"
+      clientSecret: "{{client_secret}}"
+      grant_type: client_credentials
+      accessTokenUrl: "{{keycloak_base_url}}/realms/{{realm}}/protocol/openid-connect/token"

@@ -10,5 +10,16 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-@org.jspecify.annotations.NullMarked
-package ee.geckosolutions.mra.common.platform.web.jackson;
+package ee.geckosolutions.mra.common.platform.exception;
+
+import java.util.Optional;
+
+public interface ErrorDescriptor {
+
+    String getErrorCode();
+
+    default Optional<String> getDetails() {
+        return Optional.empty();
+    }
+
+}

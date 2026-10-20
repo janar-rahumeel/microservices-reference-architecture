@@ -26,7 +26,7 @@ public class CustomerNotFoundException extends AbstractApplicationException {
 
     public CustomerNotFoundException(UUID id) {
         super(ApplicationExceptionType.ENTITY_NOT_FOUND,
-              () -> "customer.technical.entity-not-found",
+              "customer.technical.entity-not-found",
               "Customer not found by id: " + id);
     }
 

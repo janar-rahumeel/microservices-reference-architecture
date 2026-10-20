@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.gateway.context.access.adapter.out.api;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import ee.geckosolutions.mra.common.contract.access.web.dto.UserV1Response;
 import ee.geckosolutions.mra.gateway.context.access.application.port.UserRepository;
@@ -37,14 +38,13 @@ public class AuthenticatedUserRepository implements UserRepository {
     private final InternalUserV1Client internalUserV1Client;
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        ResponseEntity<UserV1Response> responseEntity = internalUserV1Client.get(username);
+    public Optional<User> findById(UUID id) {
+        ResponseEntity<UserV1Response> responseEntity = internalUserV1Client.get(id);
         HttpStatusCode httpStatusCode = responseEntity.getStatusCode();
 
         if (httpStatusCode.isSameCodeAs(HttpStatus.OK)) {
             return Optional.ofNullable(responseEntity.getBody()).map(this::toUser).or(() -> {
-                throw new IllegalStateException(
-                        "Internal user service returned an empty body for user '%s'".formatted(username));
+                throw new IllegalStateException("Internal user service returned an empty body for id '%s'".formatted(id));
             });
         }
 
@@ -53,11 +53,11 @@ public class AuthenticatedUserRepository implements UserRepository {
         }
 
         throw new IllegalStateException(
-                "Internal user service returned unexpected HTTP status '%s' for user '%s'".formatted(httpStatusCode, username));
+                "Internal user service returned unexpected HTTP status '%s' for id '%s'".formatted(httpStatusCode, id));
     }
 
     private User toUser(UserV1Response response) {
-        return new User(response.getUsername(), null, AuthorityUtils.createAuthorityList(response.getAuthorities()));
+        return new User("masked", null, AuthorityUtils.createAuthorityList(response.getAuthorities()));
     }
 
 }

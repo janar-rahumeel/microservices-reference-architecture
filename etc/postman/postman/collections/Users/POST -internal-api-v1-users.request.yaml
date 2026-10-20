@@ -1,0 +1,20 @@
+$kind: http-request
+name: POST /internal/api/v1/users
+url: "{{core_base_url}}/internal/api/v1/users"
+method: POST
+headers:
+  Accept: application/json
+  traceparent: 00-4bf92f3577b22da1a3ce329d0e0e4457-00f067aa0ba602b1-01
+body:
+  type: json
+  content: |-
+    {
+      "username": "chuck.norris",
+      "firstName": "Chuck",
+      "lastName": "Norris",
+      "email": "chuck.norris@mra.local",
+      "roles": ["SUPER_ADMIN"]
+    }
+settings:
+  disabledSystemHeaders: []
+order: 1000

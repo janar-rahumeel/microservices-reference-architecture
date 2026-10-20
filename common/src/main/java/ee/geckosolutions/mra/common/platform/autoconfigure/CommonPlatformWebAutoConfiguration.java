@@ -16,7 +16,7 @@ import java.util.function.Predicate;
 
 import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextContributor;
 import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextFilter;
-import ee.geckosolutions.mra.common.platform.observation.ecs.UserEcsLoggingContextContributor;
+import ee.geckosolutions.mra.common.platform.observation.ecs.OAuth2UserEcsLoggingContextContributor;
 import ee.geckosolutions.mra.common.platform.web.DefaultExceptionHandler;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
 
@@ -32,6 +32,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 import org.zalando.logbook.HttpRequest;
 import org.zalando.logbook.autoconfigure.LogbookAutoConfiguration;
@@ -90,13 +91,13 @@ public class CommonPlatformWebAutoConfiguration {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnClass(SecurityFilterChain.class) // TODO change when every MS requires security
-    static class SecurityConfiguration {
+    @ConditionalOnClass({ SecurityFilterChain.class, AbstractOAuth2TokenAuthenticationToken.class })
+    static class OAuth2ResourceServerConfiguration {
 
         @Bean
         @ConditionalOnBean(SecurityFilterChain.class)
-        EcsLoggingContextContributor userEcsLoggingContextContributor() {
-            return new UserEcsLoggingContextContributor();
+        EcsLoggingContextContributor oauth2ResourceServerUserEcsLoggingContextContributor() {
+            return new OAuth2UserEcsLoggingContextContributor();
         }
 
     }

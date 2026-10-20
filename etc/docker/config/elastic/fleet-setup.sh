@@ -283,7 +283,7 @@ else
                 },
                 "processors": {
                   "type": "yaml",
-                  "value": "- decode_json_fields:\n    fields:\n      - message\n    target: docker\n\n- script:\n    lang: javascript\n    source: |\n      function process(event) {\n        var log = event.Get(\"docker.log\");\n        if (log != null) {\n          event.Put(\"message\", log);\n        }\n      }\n\n- add_fields:\n    target: service\n    fields:\n      name: traefik"
+                  "value": "- decode_json_fields:\n    fields:\n      - log\n    target: traefik\n    overwrite_keys: true\n\n- add_fields:\n    target: service\n    fields:\n      name: traefik"
                 }
               }
             }

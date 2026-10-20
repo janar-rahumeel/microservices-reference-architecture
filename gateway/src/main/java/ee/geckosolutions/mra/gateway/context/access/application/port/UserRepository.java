@@ -18,11 +18,12 @@
 package ee.geckosolutions.mra.gateway.context.access.application.port;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.security.core.userdetails.User;
 
 public interface UserRepository {
 
-    Optional<User> findByUsername(String username);
+    Optional<User> findById(UUID id);
 
 }
