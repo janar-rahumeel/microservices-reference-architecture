@@ -23,8 +23,16 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class HttpClientUtil {
 
-    public static Consumer<RestClient.Builder> configure(HttpServiceProperties httpServiceProperties) {
-        return builder -> builder.baseUrl(httpServiceProperties.getBaseUrl());
+    public static Consumer<RestClient.Builder> configure(ServiceProperties serviceProperties) {
+        return builder -> {
+            builder.baseUrl(serviceProperties.getBaseUrl());
+
+            if (serviceProperties instanceof SecuredServiceProperties securedServiceProperties) {
+                builder.defaultHeaders(
+                        httpHeaders -> httpHeaders
+                                .setBasicAuth(securedServiceProperties.getUsername(), securedServiceProperties.getPassword()));
+            }
+        };
     }
 
     public static <T> T create(RestClient.Builder restClientBuilder, Class<T> httpServiceType) {

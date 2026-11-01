@@ -20,7 +20,7 @@ package ee.geckosolutions.mra.token.config;
 import java.util.HashSet;
 import java.util.Set;
 
-import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
+import ee.geckosolutions.mra.common.platform.http.ServiceProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -53,7 +53,7 @@ public class ApplicationProperties {
 
     @Getter
     @Setter
-    public static class Keycloak implements HttpServiceProperties {
+    public static class Keycloak implements ServiceProperties {
 
         private String baseUrl;
 

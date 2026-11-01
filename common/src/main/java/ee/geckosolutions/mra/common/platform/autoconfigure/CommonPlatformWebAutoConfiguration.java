@@ -19,6 +19,7 @@ import ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextFi
 import ee.geckosolutions.mra.common.platform.observation.ecs.OAuth2UserEcsLoggingContextContributor;
 import ee.geckosolutions.mra.common.platform.web.DefaultExceptionHandler;
 import ee.geckosolutions.mra.common.platform.web.ErrorResponseV2ExceptionHandler;
+import ee.geckosolutions.mra.common.platform.web.security.Sha256HashConverter;
 
 import io.micrometer.context.ContextRegistry;
 import io.micrometer.context.ContextSnapshot;
@@ -30,6 +31,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
@@ -42,6 +44,12 @@ import org.zalando.logbook.servlet.AsyncOnCompleteListenerWrapper;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class CommonPlatformWebAutoConfiguration {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    static Sha256HashConverter sha256HashConverter() {
+        return new Sha256HashConverter();
+    }
 
     @Bean
     @ConditionalOnMissingBean(DefaultExceptionHandler.class)

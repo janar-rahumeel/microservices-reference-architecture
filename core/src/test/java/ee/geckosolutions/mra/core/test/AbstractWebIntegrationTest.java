@@ -28,7 +28,11 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureTestRestTemplate
 public abstract class AbstractWebIntegrationTest {
 
-    @Autowired
     protected TestRestTemplate testRestTemplate;
+
+    @Autowired
+    void setTestRestTemplate(TestRestTemplate testRestTemplate) {
+        this.testRestTemplate = testRestTemplate.withBasicAuth("core-test", "core-test-secret");
+    }
 
 }

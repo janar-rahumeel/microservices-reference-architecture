@@ -15,6 +15,11 @@ body:
       "email": "chuck.norris@mra.local",
       "roles": ["SUPER_ADMIN"]
     }
+auth:
+  type: basic
+  credentials:
+    username: postman
+    password: postman-secret
 settings:
   disabledSystemHeaders: []
 order: 1000
