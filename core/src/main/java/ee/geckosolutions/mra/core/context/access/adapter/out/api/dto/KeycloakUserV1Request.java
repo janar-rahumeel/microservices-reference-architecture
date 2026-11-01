@@ -33,5 +33,21 @@ public class KeycloakUserV1Request {
     private final boolean enabled;
     private final boolean emailVerified;
     private final List<String> requiredActions;
+    private final List<Credential> credentials;
+
+    @Getter
+    @Builder
+    public static class Credential {
+
+        @Builder.Default
+        private final String type = "password";
+
+        @Builder.Default
+        private final String value = "changeme";
+
+        @Builder.Default
+        private final boolean temporary = true;
+
+    }
 
 }

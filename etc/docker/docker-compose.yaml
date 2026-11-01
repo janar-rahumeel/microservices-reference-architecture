@@ -78,9 +78,12 @@ services:
   rabbitmq:
     image: rabbitmq:4.3-management-alpine
     ports:
-      - "5672:5672"
+      - "5671:5671"
       - "15672:15672"
     volumes:
+      - ./config/internal-server_ca.crt:/certs/rabbitmq_ca.crt:ro
+      - ./config/internal-server.crt:/certs/rabbitmq.crt:ro
+      - ./config/internal-server.key:/certs/rabbitmq.key:ro
       - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
       - rabbitmq-data:/var/lib/rabbitmq

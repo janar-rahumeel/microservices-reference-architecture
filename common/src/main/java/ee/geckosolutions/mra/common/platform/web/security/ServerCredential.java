@@ -10,10 +10,12 @@
  *
  * For licensing information, contact: licensing@geckosolutions.ee
  */
-package ee.geckosolutions.mra.common.platform.http;
+package ee.geckosolutions.mra.common.platform.web.security;
 
-public interface HttpServiceProperties {
+public interface ServerCredential {
 
-    String getBaseUrl();
+    String getUsername();
+
+    Sha256Hash getPassword();
 
 }

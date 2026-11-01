@@ -18,6 +18,7 @@
 package ee.geckosolutions.mra.core.context.access.adapter.out.api;
 
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 import ee.geckosolutions.mra.common.platform.observation.Adapter;
@@ -55,6 +56,7 @@ public class KeycloakIdentityProvider implements IdentityProvider {
                 .enabled(true)
                 .emailVerified(false)
                 .requiredActions(keycloak.getRequiredActions())
+                .credentials(List.of(KeycloakUserV1Request.Credential.builder().build()))
                 .build();
 
         try {

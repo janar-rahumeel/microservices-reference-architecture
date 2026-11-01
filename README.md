@@ -13,8 +13,18 @@ service configuration
 
 ### 🔐 Security & TLS
 
-[Local TLS Setup](etc/local-tls-setup.md) - Step CA setup, local
-certificate authority, and HTTPS configuration for all services
+[Local TLS Setup](etc/local-tls-setup.md) - Step CA setup, local certificate authority, and HTTPS configuration for all services
+
+> ⚠️ **Demo vs. PRODUCTION Security Considerations**
+>
+> This setup demonstrates:
+> - **Client Credentials Flow (M2M):** External service-to-service authentication
+> - **Authorization Code Flow with PKCE:** User authentication for the Angular SPA
+> - **TLS and Basic Auth:** Internal service-to-service communication security
+>
+> For **demo purposes**, the configuration is intentionally simplified to make local setup and testing easier.
+>
+> For **production**, see [Security Considerations](etc/docs/security-considerations.md).
 
 ### 🌐 Ingress & Routing
 
@@ -42,8 +52,6 @@ make deploy-keycloak
 ```
 
 URL: https://kc.mra.local:8443 (credentials mra:mra123)
-
-See [Keycloak Setup](etc/keycloak-configuration.md) for OAuth2/OIDC configuration
 
 ### 🐘 Database
 

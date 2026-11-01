@@ -22,9 +22,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
-import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
+import ee.geckosolutions.mra.common.platform.http.SecuredServiceProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -49,9 +50,17 @@ public class ApplicationProperties {
 
         @Getter
         @Setter
-        public static class CoreService implements HttpServiceProperties {
+        public static class CoreService implements SecuredServiceProperties {
 
             private String baseUrl;
+            private String bundle;
+            private String username;
+            private String password;
+
+            @Override
+            public Optional<String> getBundle() {
+                return Optional.ofNullable(bundle);
+            }
 
         }
 

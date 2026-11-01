@@ -20,7 +20,7 @@ package ee.geckosolutions.mra.gateway.config;
 import java.time.Clock;
 
 import ee.geckosolutions.mra.common.platform.http.HttpClientUtil;
-import ee.geckosolutions.mra.common.platform.http.HttpServiceProperties;
+import ee.geckosolutions.mra.common.platform.http.SecuredServiceProperties;
 import ee.geckosolutions.mra.gateway.adapter.in.web.DummyApiVersionResolver;
 import ee.geckosolutions.mra.gateway.adapter.in.web.EndpointDeprecationHandler;
 
@@ -31,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.restclient.autoconfigure.RestClientBuilderConfigurer;
+import org.springframework.boot.restclient.autoconfigure.RestClientSsl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
@@ -79,13 +80,15 @@ public class ApplicationConfiguration {
     @Bean(CORE_SERVICE_REST_CLIENT_BUILDER_BEAN_NAME)
     RestClient.Builder coreServiceRestClientBuilder(
             RestClientBuilderConfigurer restClientBuilderConfigurer,
-            LogbookClientHttpRequestInterceptor logbookClientHttpRequestInterceptor) {
-        HttpServiceProperties httpServiceProperties = applicationProperties.getInternalServices().getCoreService();
+            LogbookClientHttpRequestInterceptor logbookClientHttpRequestInterceptor,
+            RestClientSsl restClientSsl) {
+        SecuredServiceProperties securedServiceProperties = applicationProperties.getInternalServices().getCoreService();
         RestClient.Builder builder = restClientBuilderConfigurer.configure(RestClient.builder())
                 .requestInterceptor(logbookClientHttpRequestInterceptor)
-                .apply(HttpClientUtil.configure(httpServiceProperties));
-        builder.defaultStatusHandler(HttpStatusCode::isError, (ignoredHttpRequest, ignoredClientHttpResponse) -> {
-        });
+                .apply(HttpClientUtil.configure(securedServiceProperties))
+                .defaultStatusHandler(HttpStatusCode::isError, (ignoredHttpRequest, ignoredClientHttpResponse) -> {
+                });
+        securedServiceProperties.getBundle().ifPresent(bundle -> builder.apply(restClientSsl.fromBundle(bundle)));
         return builder;
     }
 
