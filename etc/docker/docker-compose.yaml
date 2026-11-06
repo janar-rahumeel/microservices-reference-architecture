@@ -1,7 +1,7 @@
 services:
 
   traefik:
-    image: traefik:v3.7.13
+    image: traefik:v3.7.17
     ports:
       - "8443:443"
     volumes:
@@ -20,7 +20,7 @@ services:
       driver: json-file
 
   traefik-experimental:
-    image: traefik:v3.7.13
+    image: traefik:v3.7.17
     ports:
       - "8443:443"
     volumes:
@@ -35,17 +35,19 @@ services:
       - "--log.format=json"
       - "--accesslog=true"
       - "--accesslog.format=json"
+    logging:
+      driver: json-file
 
   redis-experimental:
-    image: redis:8.10.1-alpine
+    image: redis:8.10-alpine
     ports:
       - "6379:6379"
     volumes:
-      - ./data/redis:/data
+      - redis-data:/data
     command: redis-server --appendonly yes
 
   keycloak-db:
-    image: postgres:18.4-alpine
+    image: postgres:18.6-alpine
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -54,7 +56,7 @@ services:
       - postgres-keycloak-data:/var/lib/postgresql
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.6
+    image: quay.io/keycloak/keycloak:26.8
     depends_on:
       - keycloak-db
     ports:
@@ -89,14 +91,14 @@ services:
       - rabbitmq-data:/var/lib/rabbitmq
 
   blackbox:
-    image: prom/blackbox-exporter:v0.27.0
+    image: prom/blackbox-exporter:v0.29.1-distroless
     ports:
       - "9115:9115"
     volumes:
       - ./config/prometheus/blackbox.yaml:/etc/blackbox_exporter/config.yml:ro
 
   prometheus:
-    image: prom/prometheus:v3.13.0
+    image: prom/prometheus:v3.16.0-distroless
     depends_on:
       - blackbox
     ports:
@@ -105,18 +107,20 @@ services:
       - ./config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
 
   tempo:
-    image: grafana/tempo:2.9.5
+    image: grafana/tempo:3.1.1
+    # TODO workaround root user
+    user: root
     ports:
       - "3200:3200"
       - "4317:4317"
     volumes:
       - ./config/grafana/tempo.yaml:/etc/config.yaml:ro
-      - tempo-data:/tmp/tempo
+      - tempo-data:/data/tempo
     command:
       - "-config.file=/etc/config.yaml"
 
   grafana:
-    image: grafana/grafana:13.1.4
+    image: grafana/grafana:13.3.0-distroless-slim
     depends_on:
       - prometheus
       - tempo
@@ -130,7 +134,7 @@ services:
       - grafana-data:/var/lib/grafana
 
   elasticsearch:
-    image: elastic/elasticsearch:9.5.0
+    image: elastic/elasticsearch:9.5.6
     environment:
       ES_SETTING_DISCOVERY_TYPE: single-node
       ES_SETTING_XPACK_SECURITY_ENABLED: true
@@ -154,7 +158,7 @@ services:
       - infra
 
   elasticsearch-setup:
-    image: curlimages/curl:8.10.1
+    image: curlimages/curl:8.23.0
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -175,7 +179,7 @@ services:
       - infra
 
   kibana:
-    image: elastic/kibana:9.5.0
+    image: elastic/kibana:9.5.6
     depends_on:
       elasticsearch-setup:
         condition: service_completed_successfully
@@ -203,7 +207,7 @@ services:
       - infra
 
   kibana-setup:
-    image: curlimages/curl:8.10.1
+    image: curlimages/curl:8.23.0
     depends_on:
       kibana:
         condition: service_healthy
@@ -219,7 +223,7 @@ services:
       - infra
 
   elastic-fleet-setup:
-    image: curlimages/curl:8.10.1
+    image: curlimages/curl:8.23.0
     depends_on:
       kibana-setup:
         condition: service_completed_successfully
@@ -238,7 +242,7 @@ services:
       - infra
 
   elastic-fleet:
-    image: elastic/elastic-agent:9.5.0
+    image: elastic/elastic-agent:9.5.6
     depends_on:
       elastic-fleet-setup:
         condition: service_completed_successfully
@@ -264,7 +268,7 @@ services:
           - fleet.mra.local
 
   elastic-agent:
-    image: elastic/elastic-agent:9.5.0
+    image: elastic/elastic-agent:9.5.6
     depends_on:
       elastic-fleet:
         condition: service_started
@@ -289,7 +293,7 @@ services:
       - infra
 
   mra-db:
-    image: postgres:18.4-alpine
+    image: postgres:18.6-alpine
     ports:
       - "127.0.0.1:5432:5432"
     environment:
@@ -306,7 +310,7 @@ services:
       - postgres-mra-data:/var/lib/postgresql
 
   likec4:
-    image: likec4/likec4:1.59
+    image: likec4/likec4:1.60
     ports:
       - "5173:5173"
       - "24700:24700"
@@ -326,5 +330,6 @@ volumes:
   rabbitmq-data:
   tempo-data:
   grafana-data:
+  redis-data:
 networks:
   infra:

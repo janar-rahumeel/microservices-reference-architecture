@@ -283,7 +283,7 @@ else
                 },
                 "processors": {
                   "type": "yaml",
-                  "value": "- decode_json_fields:\n    fields:\n      - log\n    target: traefik\n    overwrite_keys: true\n\n- add_fields:\n    target: service\n    fields:\n      name: traefik"
+                  "value": "- decode_json_fields:\n    fields:\n      - message\n    target: docker_envelope\n    overwrite_keys: true\n\n- drop_fields:\n    fields:\n      - message\n\n- copy_fields:\n    fields:\n      - from: docker_envelope.log\n        to: message\n    fail_on_error: true\n    ignore_missing: false\n\n- drop_fields:\n    fields:\n      - docker_envelope\n\n- add_fields:\n    target: service\n    fields:\n      name: traefik"
                 }
               }
             }
