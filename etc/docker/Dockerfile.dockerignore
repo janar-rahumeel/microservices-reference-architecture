@@ -1,0 +1,3 @@
+# Used with etc/docker/Dockerfile, whose build context is a module directory: only the packaged jar is needed
+**
+!target/microservices-reference-architecture-*.jar

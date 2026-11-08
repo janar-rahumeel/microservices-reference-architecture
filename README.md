@@ -121,21 +121,18 @@ provides the backend for log search and analysis
 
 Elastic Agent collects Spring Boot ECS-structured application logs and forwards them to Elasticsearch
 
-### 🧩 Start Applications
-
-#### UI
+### 🧩 Build & Start Applications
 
 ``` bash
-make start-ui
+make build-images
+make deploy-applications
 ```
+
+#### UI
 
 URL: https://ui.mra.local:8443
 
 #### API Gateway
-
-``` bash
-make start-gateway
-```
 
 URL: https://api.mra.local:8443
 
@@ -143,17 +140,9 @@ Swagger UI: https://api.mra.local:8443/swagger-ui/index.html
 
 #### Core Microservice
 
-``` bash
-make start-core
-```
-
 No public URL (accessible through the API Gateway)
 
 #### Worker Microservice
-
-``` bash
-make start-worker
-```
 
 No public URL
 
@@ -164,7 +153,7 @@ This service explores a backend-mediated OAuth2/OIDC approach where valid access
 The existing SPA OAuth2 Authorization Code Flow remains fully supported and works as before. This allows both approaches to be evaluated side by side without changing the existing SPA authentication flow
 
 ``` bash
-make start-token-experimental
+make deploy-token-experimental
 ```
 
 No public URL
@@ -172,7 +161,7 @@ No public URL
 Dependencies:
 
 ``` bash
-make deploy-treafik-experimental
+make deploy-traefik-experimental
 make deploy-redis-experimental
 ```
 

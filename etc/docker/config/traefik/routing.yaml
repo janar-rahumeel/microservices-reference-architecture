@@ -27,8 +27,8 @@ http:
     gateway:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8001"
+          - url: "http://gateway.mra.local:8080"
     ui:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:4200"
+          - url: "http://ui.mra.local:8080"

@@ -1,3 +1,31 @@
+x-app: &app
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,size=64m
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  labels:
+    co.elastic.logs.enabled: "true"
+    co.elastic.logs.integration: "standard"
+
+x-app-environment: &app-environment
+  MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://tempo:4317
+  LOGGING_STRUCTURED_FORMAT_CONSOLE: ee.geckosolutions.mra.common.platform.observation.ecs.EcsStructuredLogFormatter
+
+x-app-rabbitmq-client: &app-rabbitmq-client
+  SPRING_RABBITMQ_HOST: rabbitmq.mra.local
+  SPRING_RABBITMQ_SSL_ENABLED: "true"
+  SPRING_RABBITMQ_SSL_BUNDLE: rabbit
+  SPRING_SSL_BUNDLE_PEM_RABBIT_TRUSTSTORE_CERTIFICATE: file:/certs/internal-server_ca.crt
+
+x-app-tls-server: &app-tls-server
+  SERVER_SSL_BUNDLE: server
+  SPRING_SSL_BUNDLE_PEM_SERVER_OPTIONS_ENABLEDPROTOCOLS: TLSv1.3
+  SPRING_SSL_BUNDLE_PEM_SERVER_KEYSTORE_CERTIFICATE: file:/certs/internal-server.crt
+  SPRING_SSL_BUNDLE_PEM_SERVER_KEYSTORE_PRIVATEKEY: file:/certs/internal-server.key
+
 services:
 
   traefik:
@@ -16,8 +44,11 @@ services:
       - "--log.format=json"
       - "--accesslog=true"
       - "--accesslog.format=json"
-    logging:
-      driver: json-file
+    labels:
+      co.elastic.logs.enabled: "true"
+      co.elastic.logs.integration: "traefik"
+    networks:
+      - edge
 
   traefik-experimental:
     image: traefik:v3.7.17
@@ -35,16 +66,24 @@ services:
       - "--log.format=json"
       - "--accesslog=true"
       - "--accesslog.format=json"
-    logging:
-      driver: json-file
+    labels:
+      co.elastic.logs.enabled: "true"
+      co.elastic.logs.integration: "traefik"
+    networks:
+      - edge
 
   redis-experimental:
     image: redis:8.10-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cache
 
   keycloak-db:
     image: postgres:18.6-alpine
@@ -54,13 +93,13 @@ services:
       POSTGRES_PASSWORD: keycloak
     volumes:
       - postgres-keycloak-data:/var/lib/postgresql
+    networks:
+      - identity-data
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.8
     depends_on:
       - keycloak-db
-    ports:
-      - "127.0.0.1:8100:8080"
     environment:
       KC_DB: postgres
       KC_DB_URL_HOST: keycloak-db
@@ -76,6 +115,10 @@ services:
     command:
       - start-dev
       - --import-realm
+    networks:
+      - edge
+      - identity
+      - identity-data
 
   rabbitmq:
     image: rabbitmq:4.3-management-alpine
@@ -89,6 +132,16 @@ services:
       - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
       - ./config/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
       - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      messaging:
+        aliases:
+          - rabbitmq.mra.local
 
   blackbox:
     image: prom/blackbox-exporter:v0.29.1-distroless
@@ -96,6 +149,8 @@ services:
       - "9115:9115"
     volumes:
       - ./config/prometheus/blackbox.yaml:/etc/blackbox_exporter/config.yml:ro
+    networks:
+      - observability
 
   prometheus:
     image: prom/prometheus:v3.16.0-distroless
@@ -105,6 +160,8 @@ services:
       - "9444:9090"
     volumes:
       - ./config/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - observability
 
   tempo:
     image: grafana/tempo:3.1.1
@@ -118,6 +175,8 @@ services:
       - tempo-data:/data/tempo
     command:
       - "-config.file=/etc/config.yaml"
+    networks:
+      - observability
 
   grafana:
     image: grafana/grafana:13.3.0-distroless-slim
@@ -132,6 +191,8 @@ services:
     volumes:
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana-data:/var/lib/grafana
+    networks:
+      - observability
 
   elasticsearch:
     image: elastic/elasticsearch:9.5.6
@@ -155,7 +216,7 @@ services:
       start_period: 30s
     mem_limit: 4g
     networks:
-      - infra
+      - observability
 
   elasticsearch-setup:
     image: curlimages/curl:8.23.0
@@ -176,7 +237,7 @@ services:
     entrypoint: [ "/bin/sh", "/config/setup.sh" ]
     restart: "no"
     networks:
-      - infra
+      - observability
 
   kibana:
     image: elastic/kibana:9.5.6
@@ -204,7 +265,7 @@ services:
       retries: 30
       start_period: 30s
     networks:
-      - infra
+      - observability
 
   kibana-setup:
     image: curlimages/curl:8.23.0
@@ -220,7 +281,7 @@ services:
     entrypoint: [ "/bin/sh", "/config/setup.sh" ]
     restart: "no"
     networks:
-      - infra
+      - observability
 
   elastic-fleet-setup:
     image: curlimages/curl:8.23.0
@@ -239,7 +300,7 @@ services:
     entrypoint: [ "/bin/sh", "/config/setup.sh" ]
     restart: "no"
     networks:
-      - infra
+      - observability
 
   elastic-fleet:
     image: elastic/elastic-agent:9.5.6
@@ -263,7 +324,7 @@ services:
       - ../../etc/certificate:/certs:ro
       - secrets:/config/secrets:ro
     networks:
-      infra:
+      observability:
         aliases:
           - fleet.mra.local
 
@@ -290,7 +351,7 @@ services:
         export FLEET_ENROLLMENT_TOKEN="$$(cat /config/secrets/mra-agent-enrollment.token)"
         exec /usr/bin/tini -- /usr/local/bin/docker-entrypoint
     networks:
-      - infra
+      - observability
 
   mra-db:
     image: postgres:18.6-alpine
@@ -308,6 +369,126 @@ services:
     volumes:
       - ./config/postgres/init-core.sql:/docker-entrypoint-initdb.d/init-core.sql:ro
       - postgres-mra-data:/var/lib/postgresql
+    networks:
+      - mra-data
+
+  gateway:
+    <<: *app
+    image: ${MRA_IMAGE_REGISTRY:-}mra/gateway:${MRA_IMAGE_TAG:-latest}
+    environment:
+      <<: *app-environment
+      MANAGEMENT_SERVER_PORT: 8081
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWKSETURI: http://keycloak:8080/realms/mra/protocol/openid-connect/certs
+      SPRING_SSL_BUNDLE_PEM_CLIENT_TRUSTSTORE_CERTIFICATE: file:/certs/internal-server_ca.crt
+      APPLICATION_SECURITY_CORS_ALLOWEDORIGINS: https://ui.mra.local:8443
+      APPLICATION_INTERNALSERVICES_CORESERVICE_BASEURL: https://core.mra.local
+      APPLICATION_INTERNALSERVICES_CORESERVICE_BUNDLE: client
+      APPLICATION_INTERNALSERVICES_CORESERVICE_USERNAME: gateway
+      APPLICATION_INTERNALSERVICES_CORESERVICE_PASSWORD: gateway-secret
+    volumes:
+      - ./config/internal-server_ca.crt:/certs/internal-server_ca.crt:ro
+    mem_limit: 512m
+    networks:
+      edge:
+        aliases:
+          - gateway.mra.local
+      identity:
+      mra-api:
+      observability:
+        aliases:
+          - gateway.mra.local
+
+  core:
+    <<: *app
+    image: ${MRA_IMAGE_REGISTRY:-}mra/core:${MRA_IMAGE_TAG:-latest}
+    depends_on:
+      mra-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: [ *app-environment, *app-rabbitmq-client, *app-tls-server ]
+      SERVER_PORT: 443
+      MANAGEMENT_SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://mra-db:5432/core
+      SPRING_LIQUIBASE_CONTEXTS: demo
+      APPLICATION_KEYCLOAK_BASEURL: http://keycloak:8080
+      APPLICATION_SECURITY_SERVERCREDENTIALS_0_USERNAME: gateway
+      APPLICATION_SECURITY_SERVERCREDENTIALS_0_PASSWORD: Hguq5QpuIAbYlPnmTFOhMX5gMvS6Z98IGZ1TeMWUjOY=
+    volumes:
+      - ./config/internal-server_ca.crt:/certs/internal-server_ca.crt:ro
+      - ./config/internal-server.crt:/certs/internal-server.crt:ro
+      - ./config/internal-server.key:/certs/internal-server.key:ro
+    mem_limit: 512m
+    networks:
+      mra-api:
+        aliases:
+          - core.mra.local
+      identity:
+      messaging:
+      mra-data:
+      observability:
+        aliases:
+          - core.mra.local
+
+  worker:
+    <<: *app
+    image: ${MRA_IMAGE_REGISTRY:-}mra/worker:${MRA_IMAGE_TAG:-latest}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      <<: [ *app-environment, *app-rabbitmq-client, *app-tls-server ]
+      SERVER_PORT: 443
+      MANAGEMENT_SERVER_PORT: 8081
+    volumes:
+      - ./config/internal-server_ca.crt:/certs/internal-server_ca.crt:ro
+      - ./config/internal-server.crt:/certs/internal-server.crt:ro
+      - ./config/internal-server.key:/certs/internal-server.key:ro
+    mem_limit: 512m
+    networks:
+      messaging:
+      observability:
+        aliases:
+          - worker.mra.local
+
+  token-experimental:
+    <<: *app
+    image: ${MRA_IMAGE_REGISTRY:-}mra/token:${MRA_IMAGE_TAG:-latest}
+    depends_on:
+      redis-experimental:
+        condition: service_healthy
+    environment:
+      <<: *app-environment
+      MANAGEMENT_SERVER_PORT: 8081
+      SPRING_DATA_REDIS_HOST: redis-experimental
+      APPLICATION_KEYCLOAK_BASEURL: http://keycloak:8080
+      APPLICATION_SECURITY_CORS_ALLOWEDORIGINS: https://ui.mra.local:8443
+    mem_limit: 512m
+    networks:
+      edge:
+        aliases:
+          - token-experimental.mra.local
+      identity:
+      cache:
+      observability:
+        aliases:
+          - token-experimental.mra.local
+
+  ui:
+    image: ${MRA_IMAGE_REGISTRY:-}mra/ui:${MRA_IMAGE_TAG:-latest}
+    labels:
+      co.elastic.logs.enabled: "true"
+      co.elastic.logs.integration: "nginx"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 128m
+    networks:
+      edge:
+        aliases:
+          - ui.mra.local
 
   likec4:
     image: likec4/likec4:1.60
@@ -332,4 +513,14 @@ volumes:
   grafana-data:
   redis-data:
 networks:
-  infra:
+  edge:
+  identity:
+    internal: true
+  mra-api:
+    internal: true
+  messaging:
+  mra-data:
+  identity-data:
+    internal: true
+  cache:
+  observability:

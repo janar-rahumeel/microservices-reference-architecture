@@ -295,7 +295,118 @@ else
         "title": "Traefik",
         "version": "2.7.0"
       },
-      "condition": "${docker.container.name} == \"docker-traefik-1\"",
+      "condition": "${docker.container.labels.co.elastic.logs.enabled} == \"true\" and  ${docker.container.labels.co.elastic.logs.integration} == \"traefik\"",
+      "force": false,
+      "create_dataset_templates": true
+    }'
+fi
+
+echo
+echo "Creating Nginx Logs integration ..."
+
+if curl -fsS \
+    -u "${KIBANA_USERNAME}:${KIBANA_PASSWORD}" \
+    "${KIBANA_URL}/api/fleet/package_policies/mra-nginx-logs-policy" \
+    >/dev/null 2>&1; then
+
+    echo "Nginx Logs integration already exists"
+else
+  curl -fsS \
+    -u "${KIBANA_USERNAME}:${KIBANA_PASSWORD}" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "kbn-xsrf: true" \
+    "${KIBANA_URL}/api/fleet/package_policies" \
+    -d '{
+      "id": "mra-nginx-logs-policy",
+      "name": "mra-nginx-logs",
+      "description": "MRA Nginx Logs",
+      "namespace": "default",
+      "policy_ids": [
+        "'"${DEFAULT_POLICY_ID}"'"
+      ],
+      "enabled": true,
+      "inputs": [
+        {
+          "type": "logfile",
+          "policy_template": "nginx",
+          "enabled": true,
+          "streams": [
+            {
+              "enabled": true,
+              "data_stream": {
+                "type": "logs",
+                "dataset": "nginx.access"
+              },
+              "vars": {
+                "paths": {
+                  "type": "text",
+                  "value": [
+                    "/var/lib/docker/containers/${docker.container.id}/*-json.log"
+                  ]
+                },
+                "tags": {
+                  "value": [
+                    "nginx-access"
+                  ],
+                  "type": "text"
+                },
+                "preserve_original_event": {
+                  "value": false,
+                  "type": "bool"
+                },
+                "ignore_older": {
+                  "value": "72h",
+                  "type": "text"
+                },
+                "processors": {
+                  "type": "yaml",
+                  "value": "- decode_json_fields:\n    fields:\n      - message\n    process_array: false\n    max_depth: 1\n    target: docker\n    overwrite_keys: false\n    add_error_key: true\n\n- drop_event:\n    when:\n      not:\n        equals:\n          docker.stream: stdout\n\n- drop_fields:\n    fields:\n      - message\n    ignore_missing: true\n\n- rename:\n    fields:\n      - from: docker.log\n        to: message\n    ignore_missing: true\n    fail_on_error: false\n\n- drop_fields:\n    fields:\n      - docker.stream\n      - docker.time\n    ignore_missing: true\n\n- rename:\n    fields:\n      - from: container.labels.com_docker_compose_service\n        to: service.name\n    ignore_missing: true\n    fail_on_error: false"
+                }
+              }
+            },
+            {
+              "enabled": true,
+              "data_stream": {
+                "type": "logs",
+                "dataset": "nginx.error"
+              },
+              "vars": {
+                "paths": {
+                  "type": "text",
+                  "value": [
+                    "/var/lib/docker/containers/${docker.container.id}/*-json.log"
+                  ]
+                },
+                "tags": {
+                  "value": [
+                    "nginx-error"
+                  ],
+                  "type": "text"
+                },
+                "preserve_original_event": {
+                  "value": false,
+                  "type": "bool"
+                },
+                "ignore_older": {
+                  "value": "72h",
+                  "type": "text"
+                },
+                "processors": {
+                  "type": "yaml",
+                  "value": "- decode_json_fields:\n    fields:\n      - message\n    process_array: false\n    max_depth: 1\n    target: docker\n    overwrite_keys: false\n    add_error_key: true\n\n- drop_event:\n    when:\n      not:\n        equals:\n          docker.stream: stderr\n\n- drop_fields:\n    fields:\n      - message\n    ignore_missing: true\n\n- rename:\n    fields:\n      - from: docker.log\n        to: message\n    ignore_missing: true\n    fail_on_error: false\n\n- drop_fields:\n    fields:\n      - docker.stream\n      - docker.time\n    ignore_missing: true\n\n- rename:\n    fields:\n      - from: container.labels.com_docker_compose_service\n        to: service.name\n    ignore_missing: true\n    fail_on_error: false"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "package": {
+        "name": "nginx",
+        "title": "Nginx",
+        "version": "3.2.2"
+      },
+      "condition": "${docker.container.labels.co.elastic.logs.enabled} == \"true\" and ${docker.container.labels.co.elastic.logs.integration} == \"nginx\"",
       "force": false,
       "create_dataset_templates": true
     }'
@@ -312,190 +423,135 @@ if curl -fsS \
    echo "MRA Application Logs integration already exists"
 else
    curl -fsS \
-       -u "${KIBANA_USERNAME}:${KIBANA_PASSWORD}" \
-       -X POST \
-       -H "Content-Type: application/json" \
-       -H "kbn-xsrf: true" \
-       "${KIBANA_URL}/api/fleet/package_policies" \
-       -d '{
-         "id": "mra-application-logs-policy",
-         "name": "mra-application-logs",
-         "description": "MRA application logs",
-         "namespace": "local",
-         "policy_ids": [
-           "'"${DEFAULT_POLICY_ID}"'"
-         ],
-         "enabled": true,
-         "inputs": [
-           {
-             "type": "filestream",
-             "policy_template": "filestream",
-             "enabled": true,
-             "streams": [
-               {
-                 "enabled": true,
-                 "data_stream": {
-                   "type": "logs",
-                   "dataset": "filestream.filestream"
+     -u "${KIBANA_USERNAME}:${KIBANA_PASSWORD}" \
+     -X POST \
+     -H "Content-Type: application/json" \
+     -H "kbn-xsrf: true" \
+     "${KIBANA_URL}/api/fleet/package_policies" \
+     -d '{
+       "id": "mra-application-logs-policy",
+       "name": "mra-application-logs",
+       "description": "MRA application logs",
+       "namespace": "",
+       "policy_ids": [
+         "'"${DEFAULT_POLICY_ID}"'"
+       ],
+       "enabled": true,
+       "condition": "${docker.container.labels.co.elastic.logs.enabled} == \"true\" and ${docker.container.labels.co.elastic.logs.integration} == \"standard\"",
+       "inputs": [
+         {
+           "type": "docker/metrics",
+           "policy_template": "docker",
+           "enabled": false,
+           "streams": [
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.container"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.cpu"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.diskio"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.event"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.healthcheck"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.image"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.info"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.memory"
+               }
+             },
+             {
+               "enabled": false,
+               "data_stream": {
+                 "type": "metrics",
+                 "dataset": "docker.network"
+               }
+             }
+           ]
+         },
+         {
+           "type": "filestream",
+           "policy_template": "docker",
+           "enabled": true,
+           "streams": [
+             {
+               "enabled": true,
+               "data_stream": {
+                 "type": "logs",
+                 "dataset": "docker.container_logs",
+                 "elasticsearch": {
+                   "dynamic_dataset": true,
+                   "dynamic_namespace": true
+                 }
+               },
+               "vars": {
+                 "paths": {
+                   "value": [
+                     "/var/lib/docker/containers/${docker.container.id}/*-json.log"
+                   ],
+                   "type": "text"
                  },
-                 "vars": {
-                   "paths": {
-                     "type": "text",
-                     "value": [
-                       "/logs/*.log"
-                     ]
-                   },
-                   "compression_gzip": {
-                     "value": false,
-                     "type": "bool"
-                   },
-                   "use_logs_stream": {
-                     "value": false,
-                     "type": "bool"
-                   },
-                   "data_stream.dataset": {
-                     "type": "text",
-                     "value": "mra.application"
-                   },
-                   "pipeline": {
-                     "type": "text"
-                   },
-                   "parsers": {
-                     "value": "- ndjson:\n    target: \"\"\n",
-                     "type": "yaml"
-                   },
-                   "exclude_files": {
-                     "value": [
-                       "\\\\.gz$"
-                     ],
-                     "type": "text"
-                   },
-                   "include_files": {
-                     "value": [],
-                     "type": "text"
-                   },
-                   "processors": {
-                     "type": "yaml"
-                   },
-                   "tags": {
-                     "value": [],
-                     "type": "text"
-                   },
-                   "encoding": {
-                     "type": "text"
-                   },
-                   "recursive_glob": {
-                     "value": true,
-                     "type": "bool"
-                   },
-                   "symlinks": {
-                     "type": "bool"
-                   },
-                   "resend_on_touch": {
-                     "type": "bool"
-                   },
-                   "check_interval": {
-                     "type": "text"
-                   },
-                   "ignore_older": {
-                     "type": "text"
-                   },
-                   "ignore_inactive": {
-                     "type": "text"
-                   },
-                   "close_on_state_changed_inactive": {
-                     "type": "text"
-                   },
-                   "close_on_state_changed_renamed": {
-                     "type": "bool"
-                   },
-                   "close_on_state_changed_removed": {
-                     "type": "bool"
-                   },
-                   "close_reader_eof": {
-                     "type": "bool"
-                   },
-                   "close_reader_after_interval": {
-                     "type": "text"
-                   },
-                   "clean_inactive": {
-                     "value": -1,
-                     "type": "text"
-                   },
-                   "clean_removed": {
-                     "value": true,
-                     "type": "bool"
-                   },
-                   "harvester_limit": {
-                     "value": 0,
-                     "type": "integer"
-                   },
-                   "backoff_init": {
-                     "type": "text"
-                   },
-                   "backoff_max": {
-                     "type": "text"
-                   },
-                   "fingerprint": {
-                     "value": true,
-                     "type": "bool"
-                   },
-                   "fingerprint_offset": {
-                     "value": 0,
-                     "type": "integer"
-                   },
-                   "fingerprint_length": {
-                     "value": 1024,
-                     "type": "integer"
-                   },
-                   "file_identity_native": {
-                     "value": false,
-                     "type": "bool"
-                   },
-                   "rotation_external_strategy_copytruncate": {
-                     "type": "yaml"
-                   },
-                   "exclude_lines": {
-                     "value": [],
-                     "type": "text"
-                   },
-                   "include_lines": {
-                     "value": [],
-                     "type": "text"
-                   },
-                   "buffer_size": {
-                     "type": "text"
-                   },
-                   "message_max_bytes": {
-                     "type": "text"
-                   },
-                   "condition": {
-                     "type": "text"
-                   },
-                   "delete_enabled": {
-                     "value": false,
-                     "type": "bool"
-                   },
-                   "delete_grace_period": {
-                     "type": "text"
-                   },
-                   "data_stream.type": {
-                     "value": "logs",
-                     "type": "text"
-                   }
+                 "containerParserStream": {
+                   "value": "all",
+                   "type": "text"
+                 },
+                 "additionalParsersConfig": {
+                   "type": "yaml",
+                   "value": "- ndjson:\n    target: \"\"\n    add_error_key: true\n    ignore_decoding_error: true\n"
                  }
                }
-             ]
-           }
-         ],
-         "package": {
-           "name": "filestream",
-           "title": "Custom Logs (Filestream)",
-           "version": "2.5.1"
-         },
-         "force": false,
-         "create_dataset_templates": true
-       }'
+             }
+           ]
+         }
+       ],
+       "package": {
+         "name": "docker",
+         "title": "Docker",
+         "version": "2.16.0"
+       },
+       "force": false,
+       "create_dataset_templates": true
+     }'
 
    echo
    echo "MRA Application Logs integration created"

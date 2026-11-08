@@ -3,7 +3,8 @@
   "version": "0.0.1-SNAPSHOT",
   "license": "UNLICENSED",
   "scripts": {
-    "start": "ng serve"
+    "start": "ng serve",
+    "build": "ng build"
   },
   "private": true,
   "dependencies": {

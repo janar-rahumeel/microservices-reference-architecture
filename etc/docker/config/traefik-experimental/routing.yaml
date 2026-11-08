@@ -38,7 +38,7 @@ http:
         path: /internal/api/v1/openid-connect/token
     access-token-relay:
       forwardAuth:
-        address: "http://host.docker.internal:8000/internal/api/v1/openid-connect/session-token"
+        address: "http://token-experimental.mra.local:8080/internal/api/v1/openid-connect/session-token"
         authRequestHeaders:
           - Cookie
         authResponseHeaders:
@@ -52,12 +52,12 @@ http:
     token:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8000"
+          - url: "http://token-experimental.mra.local:8080"
     gateway:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8001"
+          - url: "http://gateway.mra.local:8080"
     ui:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:4200"
+          - url: "http://ui.mra.local:8080"

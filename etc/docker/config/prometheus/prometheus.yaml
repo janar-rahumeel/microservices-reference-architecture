@@ -9,19 +9,19 @@ scrape_configs:
       module: [ http_2xx ]
     static_configs:
       - targets:
-          - http://host.docker.internal:9000/internal/actuator/health
+          - http://token-experimental.mra.local:8081/internal/actuator/health
         labels:
           service_name: token
       - targets:
-          - http://host.docker.internal:9001/internal/actuator/health
+          - http://gateway.mra.local:8081/internal/actuator/health
         labels:
           service_name: gateway
       - targets:
-          - http://host.docker.internal:9002/internal/actuator/health
+          - http://core.mra.local:8081/internal/actuator/health
         labels:
           service_name: core
       - targets:
-          - http://host.docker.internal:9003/internal/actuator/health
+          - http://worker.mra.local:8081/internal/actuator/health
         labels:
           service_name: worker
     relabel_configs:
@@ -31,23 +31,23 @@ scrape_configs:
         target_label: instance
       - target_label: __address__
         replacement: blackbox:9115
-  - job_name: "token"
+  - job_name: "token-experimental"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:9000"
+          - "token-experimental.mra.local:8081"
   - job_name: "gateway"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:9001"
+          - "gateway.mra.local:8081"
   - job_name: "core"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:9002"
+          - "core.mra.local:8081"
   - job_name: "worker"
     metrics_path: "/internal/actuator/prometheus"
     static_configs:
       - targets:
-          - "host.docker.internal:9003"
+          - "worker.mra.local:8081"

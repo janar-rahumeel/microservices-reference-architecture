@@ -19,7 +19,7 @@
     <description>Parent project managing dependency versions and build configuration</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.root.directory>${project.basedir}</project.root.directory>
         <plugin.spotless.skip>false</plugin.spotless.skip>
