@@ -2,3 +2,5 @@ org.springframework.boot.EnvironmentPostProcessor=\
 ee.geckosolutions.mra.common.platform.CommonEnvironmentPostProcessor
 org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer=\
 ee.geckosolutions.mra.common.platform.observation.ecs.EcsLoggingContextHttpConfigurer
+org.springframework.boot.logging.structured.StructuredLoggingJsonMembersCustomizer=\
+ee.geckosolutions.mra.common.platform.observation.ecs.EcsJsonMembersCustomizer

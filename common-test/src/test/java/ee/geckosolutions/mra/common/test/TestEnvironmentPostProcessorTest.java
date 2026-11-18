@@ -65,7 +65,7 @@ class TestEnvironmentPostProcessorTest {
         TEST_ENVIRONMENT_POST_PROCESSOR.postProcessEnvironment(environment, springApplication);
 
         // then
-        assertThat(environment.getPropertySources().get("mra-test-defaults")).isNull();
+        assertThat(environment.getPropertySources().get("mra-test-defaults")).isNotNull();
         assertThat(environment.getProperty("management.server.port")).isNull();
     }
 

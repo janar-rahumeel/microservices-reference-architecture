@@ -21,6 +21,10 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.util.ClassUtils;
 
+/**
+ * @see <a href="https://docs.spring.io/spring-boot/appendix/application-properties/index.html">Spring Boot application
+ *      properties</a>
+ */
 public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     static final String PROPERTY_SOURCE_NAME = "mra-defaults";
@@ -28,9 +32,11 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
         Map<String, Object> defaultProperties = new HashMap<>();
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.core.spring.task.execution.propagate-context
         defaultProperties.put("spring.task.execution.propagate-context", true);
-        defaultProperties.put("logbook.ecs.custom-namespace-prefix", "mra");
+        defaultProperties.put("spring.threads.virtual.enabled", true);
+        defaultProperties.put("logging.structured.format.console", "ecs");
+        defaultProperties.put("logging.structured.json.exclude", "tags");
+        defaultProperties.put("logging.structured.json.context.include", false);
 
         if (managementDefaultsEnabled(configurableEnvironment)) {
             defaultProperties.putAll(managementDefaultProperties());
@@ -61,6 +67,12 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
             defaultProperties.putAll(rabbitMqDefaultProperties());
         }
 
+        if (ClassUtils
+                .isPresent("org.zalando.logbook.autoconfigure.LogbookAutoConfiguration", springApplication.getClassLoader())) {
+            defaultProperties.put("logging.level.org.zalando.logbook", "TRACE");
+            defaultProperties.put("logbook.ecs.custom-namespace-prefix", "mra");
+        }
+
         if (!defaultProperties.isEmpty()) {
             configurableEnvironment.getPropertySources()
                     .addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, defaultProperties));
@@ -72,15 +84,6 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     private static Map<String, Object> managementDefaultProperties() {
-        // https://docs.spring.io/spring-boot/reference/actuator/tracing.html#actuator.micrometer-tracing.sampling
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.otlp.metrics.export.enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.logging.export.otlp.enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.opentelemetry.tracing.export.otlp.transport
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.metrics.tags
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.endpoints.web.base-path
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.endpoints.web.exposure.include
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.server.ssl.enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html#application-properties.actuator.management.server.port
         return Map.of(
                 "management.tracing.sampling.probability",
                 1.0,
@@ -103,7 +106,6 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     private static Map<String, Object> jacksonDefaultProperties() {
-        // https://docs.spring.io/spring-boot/how-to/spring-mvc.html#howto.spring-mvc.customize-jackson-jsonmapper
         return Map.of(
                 "spring.jackson.default-property-inclusion",
                 "non_null",
@@ -112,9 +114,6 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     private static Map<String, Object> persistenceDefaultProperties() {
-        // https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.jpa-and-spring-data.open-entity-manager-in-view
-        // https://docs.spring.io/spring-boot/how-to/data-initialization.html#howto.data-initialization.using-hibernate
-        // https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.jpa-and-spring-data.repositories
         return Map.of(
                 "spring.jpa.open-in-view",
                 false,
@@ -125,19 +124,14 @@ public class CommonEnvironmentPostProcessor implements EnvironmentPostProcessor 
     }
 
     private static Map<String, Object> datasourceDefaultProperties() {
-        // https://docs.spring.io/spring-boot/reference/data/sql.html#data.sql.datasource.lazy-connection
         return Map.of("spring.datasource.connection-fetch", "lazy");
     }
 
     private static Map<String, Object> datasourceObservationDefaultProperties() {
-        // https://jdbc-observations.github.io/datasource-micrometer/docs/current/docs/html/#using-features-hikaricp-support
-        // https://jdbc-observations.github.io/datasource-micrometer/docs/current/docs/html/#spans-and-metrics
         return Map.of("jdbc.hikari.enabled", false, "jdbc.opentelemetry.metrics.enabled", false);
     }
 
     private static Map<String, Object> rabbitMqDefaultProperties() {
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.integration.spring.rabbitmq.template.observation-enabled
-        // https://docs.spring.io/spring-boot/appendix/application-properties/index.html?utm_source=chatgpt.com#application-properties.integration.spring.rabbitmq.listener.simple.observation-enabled
         return Map.of(
                 "spring.rabbitmq.template.observation-enabled",
                 true,
