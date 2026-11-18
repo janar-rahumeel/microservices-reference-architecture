@@ -24,9 +24,9 @@ import org.springframework.security.oauth2.server.resource.authentication.Abstra
 
 public class OAuth2UserEcsLoggingContextContributor implements EcsLoggingContextContributor {
 
-    private static final String USER_ID = "ecs:user.id";
-    private static final String USER_NAME = "ecs:user.name";
-    private static final String USER_ROLES = "ecs:user.roles";
+    private static final String USER_ID = EcsJsonMembersCustomizer.ECS_PREFIX + "user.id";
+    private static final String USER_NAME = EcsJsonMembersCustomizer.ECS_PREFIX + "user.name";
+    private static final String USER_ROLES = EcsJsonMembersCustomizer.ECS_PREFIX + "user.roles";
     private static final String ROLE_PREFIX = "ROLE_";
 
     @Override
@@ -54,7 +54,7 @@ public class OAuth2UserEcsLoggingContextContributor implements EcsLoggingContext
                                 .filter(authority -> authority != null && authority.startsWith(ROLE_PREFIX))
                                 .map(authority -> authority.substring(ROLE_PREFIX.length()))
                                 .distinct()
-                                .collect(Collectors.joining(EcsStructuredLogFormatter.MULTI_VALUE_SEPARATOR)))
+                                .collect(Collectors.joining(EcsJsonMembersCustomizer.MULTI_VALUE_SEPARATOR)))
                 .filter(roles -> !roles.isEmpty());
     }
 

@@ -31,6 +31,7 @@ import ee.geckosolutions.mra.gateway.context.customer.adapter.out.api.InternalCu
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.resilience.annotation.ConcurrencyLimit;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,9 +51,12 @@ public class CustomerV2Controller implements CustomerV2Api {
 
     @Override
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ConcurrencyLimit(
+            limitString = "${application.api.customer.search.concurrency-limit:30}",
+            policy = ConcurrencyLimit.ThrottlePolicy.REJECT)
     @PreAuthorize("hasAuthority('PERMISSION_CUSTOMER_READ')")
-    public Callable<ResponseEntity<byte[]>> search(@RequestParam MultiValueMap<String, String> parameters) {
-        return () -> ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.search(parameters));
+    public ResponseEntity<byte[]> search(@RequestParam MultiValueMap<String, String> parameters) {
+        return ControllerSupport.executeHttpRequest(() -> internalCustomerV2Client.search(parameters));
     }
 
     @Override

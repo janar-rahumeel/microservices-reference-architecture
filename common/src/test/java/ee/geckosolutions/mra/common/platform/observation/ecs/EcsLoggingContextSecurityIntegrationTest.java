@@ -86,20 +86,14 @@ class EcsLoggingContextSecurityIntegrationTest {
     @BeforeEach
     void beforeEach() {
         configurableEnvironment.getPropertySources()
-                .addFirst(
-                        new MapPropertySource(
-                                TEST_LOGGING_PROPERTIES,
-                                Map.of(
-                                        "logging.structured.format.console",
-                                        "ee.geckosolutions.mra.common.platform.observation.ecs.EcsStructuredLogFormatter",
-                                        "logging.level.org.zalando.logbook",
-                                        "TRACE")));
+                .addFirst(new MapPropertySource(TEST_LOGGING_PROPERTIES, Map.of("logging.structured.format.console", "ecs")));
         resetLoggingSystem(configurableEnvironment);
     }
 
     @AfterEach
     void afterEach() {
-        configurableEnvironment.getPropertySources().remove(TEST_LOGGING_PROPERTIES);
+        configurableEnvironment.getPropertySources()
+                .addFirst(new MapPropertySource(TEST_LOGGING_PROPERTIES, Map.of("logging.structured.format.console", "")));
         resetLoggingSystem(configurableEnvironment);
     }
 

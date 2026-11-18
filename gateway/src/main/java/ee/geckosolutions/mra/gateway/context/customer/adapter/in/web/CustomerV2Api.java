@@ -68,7 +68,7 @@ public interface CustomerV2Api {
                     in = ParameterIn.QUERY,
                     description = "Sorting criteria. Repeat for multiple properties",
                     schema = @Schema(type = "string", example = "name,desc")) })
-    Callable<ResponseEntity<byte[]>> search(MultiValueMap<String, String> parameters);
+    ResponseEntity<byte[]> search(MultiValueMap<String, String> parameters);
 
     @Operation(
             summary = "Create a new customer",

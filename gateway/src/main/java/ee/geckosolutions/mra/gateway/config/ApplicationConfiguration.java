@@ -35,6 +35,7 @@ import org.springframework.boot.restclient.autoconfigure.RestClientSsl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.resilience.annotation.EnableResilientMethods;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.servlet.config.annotation.ApiVersionConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -42,6 +43,7 @@ import org.zalando.logbook.spring.LogbookClientHttpRequestInterceptor;
 
 @Slf4j
 @Configuration
+@EnableResilientMethods
 @RequiredArgsConstructor
 @EnableConfigurationProperties(ApplicationProperties.class)
 public class ApplicationConfiguration {

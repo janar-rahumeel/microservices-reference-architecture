@@ -14,6 +14,7 @@ package ee.geckosolutions.mra.common.platform.web;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.RejectedExecutionException;
 
 import ee.geckosolutions.mra.common.domain.exception.AbstractDomainException;
 import ee.geckosolutions.mra.common.domain.exception.DomainExceptionType;
@@ -108,20 +109,19 @@ public class ErrorResponseV2ExceptionHandler extends ResponseEntityExceptionHand
         };
     }
 
-    @ExceptionHandler(ResourceAccessException.class)
-    public @Nullable ResponseEntity<Object> handleResourceAccessException(
-            ResourceAccessException resourceAccessException,
-            WebRequest webRequest) {
+    @ExceptionHandler({ ResourceAccessException.class, RejectedExecutionException.class })
+    public @Nullable ResponseEntity<Object> handleServiceUnavailableException(Exception exception, WebRequest webRequest) {
         ErrorResponseV2 errorResponseV2Body = new ErrorResponseV2(
                 UUID.randomUUID(),
                 "general.technical.service-unavailable",
                 "Downstream service is unavailable");
-        return handleExceptionInternal(
-                resourceAccessException,
-                errorResponseV2Body,
-                HttpHeaders.EMPTY,
-                HttpStatus.SERVICE_UNAVAILABLE,
-                webRequest);
+        HttpHeaders headers = new HttpHeaders();
+
+        if (exception instanceof RejectedExecutionException) {
+            headers.add(HttpHeaders.RETRY_AFTER, "5");
+        }
+
+        return handleExceptionInternal(exception, errorResponseV2Body, headers, HttpStatus.SERVICE_UNAVAILABLE, webRequest);
     }
 
     @ExceptionHandler(Exception.class)

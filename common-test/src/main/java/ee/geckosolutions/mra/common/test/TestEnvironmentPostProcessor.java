@@ -12,6 +12,7 @@
  */
 package ee.geckosolutions.mra.common.test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.boot.EnvironmentPostProcessor;
@@ -26,23 +27,17 @@ public class TestEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment configurableEnvironment, SpringApplication springApplication) {
-        if (configurableEnvironment.getProperty(MANAGEMENT_ENABLED_PROPERTY, Boolean.class, false)) {
-            return;
+        Map<String, Object> properties = new HashMap<>();
+
+        if (!configurableEnvironment.getProperty(MANAGEMENT_ENABLED_PROPERTY, Boolean.class, false)) {
+            properties.put("management.server.port", -1);
+            properties.put("management.tracing.export.otlp.enabled", false);
+            properties.put("management.otlp.metrics.export.enabled", false);
+            properties.put("management.logging.export.otlp.enabled", false);
         }
 
-        configurableEnvironment.getPropertySources()
-                .addFirst(
-                        new MapPropertySource(
-                                PROPERTY_SOURCE_NAME,
-                                Map.of(
-                                        "management.server.port",
-                                        -1,
-                                        "management.tracing.export.otlp.enabled",
-                                        false,
-                                        "management.otlp.metrics.export.enabled",
-                                        false,
-                                        "management.logging.export.otlp.enabled",
-                                        false)));
+        properties.put("logging.structured.format.console", "");
+        configurableEnvironment.getPropertySources().addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME, properties));
     }
 
 }

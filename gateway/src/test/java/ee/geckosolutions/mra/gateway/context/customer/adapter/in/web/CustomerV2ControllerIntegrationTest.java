@@ -31,6 +31,11 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchElementV2Response;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerSearchPageV2Response;
@@ -38,6 +43,7 @@ import ee.geckosolutions.mra.common.contract.customer.web.dto.CustomerTypeV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.LegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.NewLegalEntityCustomerV2;
 import ee.geckosolutions.mra.common.contract.customer.web.dto.PersonCustomerV2;
+import ee.geckosolutions.mra.common.platform.web.dto.ErrorResponseV2;
 import ee.geckosolutions.mra.common.test.TestJwtUtil;
 import ee.geckosolutions.mra.gateway.security.config.SecurityConfiguration;
 import ee.geckosolutions.mra.gateway.test.AbstractWebIntegrationTest;
@@ -52,8 +58,10 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.JsonNode;
 
+@TestPropertySource(properties = "application.api.customer.search.concurrency-limit=1")
 class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
 
     @Autowired
@@ -63,6 +71,52 @@ class CustomerV2ControllerIntegrationTest extends AbstractWebIntegrationTest {
     void beforeEach() {
         Objects.requireNonNull(cacheManager.getCache(SecurityConfiguration.USER_CACHE_NAME), "User details cache must exist")
                 .clear();
+    }
+
+    @Test
+    void testThatSearchCustomersV2IsNotSuccessfulWhenConcurrencyLimitExceeded() throws Exception {
+        // given
+        CountDownLatch firstRequestReachedCoreLatch = new CountDownLatch(1);
+        CountDownLatch releaseFirstRequestLatch = new CountDownLatch(1);
+        coreServiceMockRestServiceServer
+                .expect(requestTo(URI.create("http://core.test/internal/api/v2/customers?page=0&size=2")))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(header(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE))
+                .andRespond(request -> {
+                    try {
+                        firstRequestReachedCoreLatch.countDown();
+                        assertThat(releaseFirstRequestLatch.await(5, TimeUnit.SECONDS)).isTrue();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    return withSuccess("{}", MediaType.APPLICATION_JSON).createResponse(request);
+                });
+        mockAuthenticatedUser();
+
+        try (ExecutorService executor = Executors.newSingleThreadExecutor()) {
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setBearerAuth(TestJwtUtil.getToken());
+            httpHeaders.setAccept(List.of(MediaType.APPLICATION_JSON));
+            HttpEntity<String> httpEntity = new HttpEntity<>(httpHeaders);
+            Future<ResponseEntity<?>> firstRequestFuture = executor.submit(
+                    () -> testRestTemplate
+                            .exchange("/api/v2/customers?page=0&size=2", HttpMethod.GET, httpEntity, byte[].class));
+            assertThat(firstRequestReachedCoreLatch.await(5, TimeUnit.SECONDS)).isTrue();
+
+            // when
+            ResponseEntity<ErrorResponseV2> rejectedResponseEntity = testRestTemplate
+                    .exchange("/api/v2/customers?page=0&size=2", HttpMethod.GET, httpEntity, ErrorResponseV2.class);
+
+            // then
+            assertThat(rejectedResponseEntity.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+
+            releaseFirstRequestLatch.countDown();
+            assertThat(firstRequestFuture.get(5, TimeUnit.SECONDS).getStatusCode()).isEqualTo(HttpStatus.OK);
+
+            coreServiceMockRestServiceServer.verify();
+        } finally {
+            releaseFirstRequestLatch.countDown();
+        }
     }
 
     @Test
